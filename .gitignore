@@ -1,0 +1,28 @@
+# Build and binaries
+build/
+cmake-build-debug/
+cmake-build-release/
+bin/
+*.o
+*.so
+*.a
+*.exe
+*.out
+
+# IDE-specific
+.idea/
+.vscode/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Temporary files
+*.tmp
+*.log
+*.swp
+*.swo
+*.bak
+*.old
