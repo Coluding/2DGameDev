@@ -14,7 +14,9 @@ file(GLOB_RECURSE SOURCES src/*.cpp)
 # Add executable
 add_executable(2DGameDev ${SOURCES}
         src/objects/obstacles.h
-        src/objects/obstacles.cpp)
+        src/objects/obstacles.cpp
+        src/player/character.h
+        src/player/character.cpp)
 
 # Link SFML libraries
 target_link_libraries(2DGameDev

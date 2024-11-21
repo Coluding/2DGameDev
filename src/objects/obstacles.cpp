@@ -1,8 +1,16 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <memory>
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <cmath>
+
 
 #include "obstacles.h"
+
+
+
 
 
 Wall::Wall(float height, float width, float x, float y, sf::Color color) {
@@ -14,7 +22,7 @@ Wall::Wall(float height, float width, float x, float y, sf::Color color) {
 Wall::Wall(float height, float width, float x, float y) {
     wall.setSize(sf::Vector2f(width, height)); // Set size (width, height)
     wall.setPosition(x, y);                   // Set initial position
-    wall.setFillColor(color=sf::Color::Blue);
+    wall.setFillColor(color=sf::Color(135, 135, 171));
 }
 
 void Wall::setPosition(float x, float y) {
@@ -25,37 +33,235 @@ void Wall::setDeltaPosition(float dx, float dy) {
     wall.move(dx, dy);
 }
 
-const sf::RectangleShape &Wall::getShape() const {
-    return wall;
-};
 
-sf::Vector2f Wall::getPosition() const {
-        return wall.getPosition();
+const sf::Vector2f Wall::getPosition() const {
+    return wall.getPosition();
 }
+
+const void Wall::draw(sf::RenderWindow &window) const {
+    window.draw(wall);
+}
+
 
 void Wall::setColor(sf::Color color){
     wall.setFillColor(color);
 }
 
-
-
-void ObstacleContainer::addObstacle(Obstacle* obs){
-    obstacles.push_back(obs);
+bool Wall::checkCollision(sf::Vector2f playerPos, float playerWidth, float playerHeight){
+    return false;
 }
 
-void ObstacleContainer::moveAll(float dx, float dy){
+
+SpikeWall::SpikeWall(float baseWidth, float baseHeight, float x, float y, float spikeWidth, float spikeHeight)
+    : spikeWidth(spikeWidth), spikeHeight(spikeHeight) {
+
+    // Initialize the base platform
+    base.setSize(sf::Vector2f(baseWidth, baseHeight));
+    base.setPosition(x, y);
+    base.setFillColor(sf::Color::Green);
+
+    // Create spikes on top of the base
+    int numSpikes = static_cast<int>(baseWidth / spikeWidth);
+    for (int i = 0; i < numSpikes; ++i) {
+        sf::ConvexShape spike(3); // Triangular spike
+        spike.setPoint(0, sf::Vector2f(x + i * spikeWidth, y));                         // Bottom-left
+        spike.setPoint(1, sf::Vector2f(x + (i + 0.5f) * spikeWidth, y - spikeHeight)); // Peak
+        spike.setPoint(2, sf::Vector2f(x + (i + 1) * spikeWidth, y));                  // Bottom-right
+        spike.setFillColor(sf::Color::Magenta); // Spikes are magenta
+        spikes.push_back(spike);
+    }
+}
+
+SpikeWall::SpikeWall(float baseWidth, float baseHeight, float x, float y, float spikeWidth, float spikeHeight,
+                     sf::Color color)
+    : spikeWidth(spikeWidth), spikeHeight(spikeHeight) {
+    // Initialize the base platform
+    base.setSize(sf::Vector2f(baseWidth, baseHeight));
+    base.setPosition(x, y);
+    base.setFillColor(color);
+
+    // Create spikes on top of the base
+    int numSpikes = static_cast<int>(baseWidth / spikeWidth);
+    for (int i = 0; i < numSpikes; ++i) {
+        sf::ConvexShape spike(3); // Triangular spike
+        spike.setPoint(0, sf::Vector2f(x + i * spikeWidth, y));                         // Bottom-left
+        spike.setPoint(1, sf::Vector2f(x + (i + 0.5f) * spikeWidth, y - spikeHeight)); // Peak
+        spike.setPoint(2, sf::Vector2f(x + (i + 1) * spikeWidth, y));                  // Bottom-right
+        spike.setFillColor(sf::Color(225, 225, 234)); // Spikes are magenta
+        spikes.push_back(spike);
+    }
+}
+
+const void SpikeWall::draw(sf::RenderWindow &window) const {
+    window.draw(base);
+    for (auto &spike: spikes){
+        window.draw(spike);
+    }
+}
+
+
+
+void SpikeWall::setPosition(float x, float y) {
+    // Update base position
+    base.setPosition(x, y);
+
+    // Update spike positions relative to the new base position
+    for (size_t i = 0; i < spikes.size(); ++i) {
+        float spikeX = x + i * spikeWidth;
+        float spikeY = y;
+        spikes[i].setPoint(0, sf::Vector2f(spikeX, spikeY));
+        spikes[i].setPoint(1, sf::Vector2f(spikeX + 0.5f * spikeWidth, spikeY - spikeHeight));
+        spikes[i].setPoint(2, sf::Vector2f(spikeX + spikeWidth, spikeY));
+    }
+}
+
+void SpikeWall::setDeltaPosition(float dx, float dy) {
+    // Move base
+    base.move(dx, dy);
+
+    // Move spikes
+    for (auto& spike : spikes) {
+        spike.move(dx, dy);
+    }
+}
+
+void SpikeWall::setColor(sf::Color color) {
+    base.setFillColor(color); // Set color for the base
+    for (auto& spike : spikes) {
+        spike.setFillColor(sf::Color::Black); // Keep spikes as magenta (or change if needed)
+    }
+}
+
+const sf::Vector2f SpikeWall::getPosition() const {
+    return base.getPosition();
+}
+
+bool SpikeWall::checkCollision(sf::Vector2f playerPos, float playerWidth, float playerHeight) {
+    return false;
+}
+
+
+FallingObstacle::FallingObstacle(float baseWidth, float baseHeight, float fallingSpeed, float x, float
+            activationTimeSeconds):
+ fallingSpeed(fallingSpeed), inScreen(false), activationTimeSeconds(activationTimeSeconds) {
+    //std::srand(static_cast<unsigned>(0));
+    int numPoints = std::rand() % 20;
+    base.setPointCount(numPoints);
+
+    for (int i = 0; i < numPoints; i++){
+        float x = static_cast<float>(std::rand() % static_cast<int>(baseWidth));
+        float y = static_cast<float>(std::rand() % static_cast<int>(baseHeight));
+        base.setPoint(i, sf::Vector2f(x,y));
+    }
+
+    base.setPosition(x, -10000);
+
+    base.setFillColor(sf::Color(133, 173, 173));
+}
+
+const sf::Vector2f FallingObstacle::getPosition() const {
+    return base.getPosition();
+}
+
+void FallingObstacle::setPosition(float x, float y) {
+    base.setPosition(x,y);
+}
+
+const void FallingObstacle::draw(sf::RenderWindow &window) const {
+    window.draw(base);
+}
+
+void FallingObstacle::setColor(sf::Color color) {
+    base.setFillColor(color);
+}
+
+void FallingObstacle::setDeltaPosition(float dx, float dy) {
+    base.move(dx, dy);
+}
+
+bool FallingObstacle::checkCollision(sf::Vector2f playerPos, float playerWidth, float playerHeight) {
+    return false;
+}
+
+float FallingObstacle::getActivationTime() const {
+    return activationTimeSeconds;
+}
+
+float FallingObstacle::getFallingSpeed() const {
+    return fallingSpeed;
+}
+
+bool FallingObstacle::isInScreen() const {
+    return inScreen;
+}
+
+void FallingObstacle::setInScreen(bool val) {
+    inScreen = val;
+}
+
+void FallingObstacle::fall() {
+    if (inScreen) {
+    if (base.getPosition().y < -9999){
+        base.setPosition(base.getPosition().x, 10);
+    }
+     base.move(0, fallingSpeed);
+    }
+}
+
+void ObstacleContainer::addObstacle(std::unique_ptr<Obstacle> obs){
+    obstacles.push_back(std::move(obs));
+}
+
+void ObstacleContainer::moveAll(float dx, float dy) const {
     for (auto &obstacle: obstacles){
         obstacle->setDeltaPosition(dx, dy);
     }
 }
 
-void ObstacleContainer::drawAll(sf::RenderWindow& window){
+void ObstacleContainer::drawAll(sf::RenderWindow& window) const {
     for (auto &obstacle: obstacles){
-        window.draw(obstacle->getShape());
+        obstacle->draw(window);
     }
 }
 
 void ObstacleContainer::clear() {
     obstacles.clear();
 }
+
+
+
+void FallingObstacleContainer::addObstacle(std::unique_ptr<FallingObstacle> obs) {
+    obstacles.push_back(std::move(obs));
+}
+
+
+void FallingObstacleContainer::activate(float elapsedTimeSeconds) const {
+    for (auto& obstacle : obstacles) { // Use a reference here
+        if (elapsedTimeSeconds >= obstacle->getActivationTime()) {
+            obstacle->setInScreen(true);
+        }
+    }
+}
+
+void FallingObstacleContainer::clear() {
+    obstacles.clear();
+}
+
+void FallingObstacleContainer::fallAll() const {
+    for (auto& obstacle : obstacles) {
+        obstacle->fall();
+    }
+}
+
+void FallingObstacleContainer::drawAll(sf::RenderWindow &window) const {
+    for (auto& obstacle : obstacles) {
+        obstacle->draw(window);
+    }
+}
+
+
+
+
+
+
 
