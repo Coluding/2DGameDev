@@ -7,6 +7,7 @@
 #define OBSTACLES_H
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/System/Vector2.hpp>
+#include <memory>
 
 class Obstacle {
 public:
@@ -110,9 +111,24 @@ public:
 
 class ObstacleFactory {
 private:
-    int num_walls;
-    int num_spike_walls;
-    int num_falling_objects;
+    int numWallsPerScreen;
+    int numSpikeWallsPerScreen;
+    int numFallingObjectsPerScreen;
+    float widthScreen;
+    float heightScreen;
+    float gameTime;
+    ObstacleContainer* container;
+    FallingObstacleContainer* fallingContainer;
+
+public:
+    ObstacleFactory(int numWalls, int numSpikeWalls, int numFallingObjects, float widthScreen,
+                    float heightScreen, float gameTime,
+                    ObstacleContainer* container, FallingObstacleContainer* fallingContainer);
+    void createWalls();
+    void createSpikeWalls();
+    void createFallingObjects();
+    std::unique_ptr<Wall>  createRandomWall(int x, int maxWidth, int maxHeight, int& gap) const;
+
 };
 
 #endif //OBSTACLES_H

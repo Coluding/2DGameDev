@@ -34,6 +34,8 @@ public:
     sf::Vector2f getPosition() const;
 
     void updateIntersectionLine();
+
+
 };
 
 #endif // VEHICLE_H

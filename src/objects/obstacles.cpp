@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
+#include <random>
 
 
 #include "obstacles.h"
@@ -260,6 +261,48 @@ void FallingObstacleContainer::drawAll(sf::RenderWindow &window) const {
 }
 
 
+ObstacleFactory::ObstacleFactory(int numWalls, int numSpikeWalls, int numFallingObjects, float widthScreen,
+                                 float heightScreen, float gameTime,
+                                 ObstacleContainer* container, FallingObstacleContainer* fallingContainer)
+    : numWallsPerScreen(numWalls), numSpikeWallsPerScreen(numSpikeWalls),
+      widthScreen(widthScreen), numFallingObjectsPerScreen(numFallingObjects),
+      gameTime(gameTime), heightScreen(heightScreen),
+      container(container), fallingContainer(fallingContainer) {
+
+      createWalls();
+}
+
+
+void ObstacleFactory::createWalls() {
+    int maxWalls = 30; //hard code
+    int gapAccumulator = 0;
+
+    for (int i = 0; i < maxWalls; i++){
+        container->addObstacle(std::move(createRandomWall(i, 100, 200, gapAccumulator)));
+    }
+
+
+}
+
+std::unique_ptr<Wall> ObstacleFactory::createRandomWall(int x, int maxWidth, int maxHeight, int& gap) const {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> disWidth(50, maxWidth);
+    std::uniform_int_distribution<> disHeight(50, maxHeight);
+    std::uniform_int_distribution<> disOffset(200, 400);
+
+    float width = disWidth(gen);
+    float height = disHeight(gen);
+
+    float y = heightScreen - height;
+    x += gap;
+    x += disOffset(gen);
+
+    gap = x + width;
+
+
+    return std::make_unique<Wall>(height, width, x, y);
+}
 
 
 

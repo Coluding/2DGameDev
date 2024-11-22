@@ -8,14 +8,13 @@ Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, f
     verticalBody.setPointCount(6);
     verticalBody.setPoint(0, sf::Vector2f(x - widthVertical / 2, y - heightVertical));
     verticalBody.setPoint(1, sf::Vector2f(x + widthVertical / 2, y - heightVertical));
-    verticalBody.setPoint(4, sf::Vector2f(x + widthVertical / 2, y));
-    verticalBody.setPoint(5, sf::Vector2f(x - widthVertical / 2, y));
     verticalBody.setPoint(2, sf::Vector2f(x - widthVertical / 2 + 10, y));
     verticalBody.setPoint(3, sf::Vector2f(x + widthVertical / 2 - 10, y));
+    verticalBody.setPoint(4, sf::Vector2f(x + widthVertical / 2, y));
+    verticalBody.setPoint(5, sf::Vector2f(x - widthVertical / 2, y));
 
     verticalBody.setFillColor(sf::Color(194, 194, 214));
 
-    // Initialize horizontal body (rectangle-like)
     horizontalBody.setPointCount(4);
     horizontalBody.setPoint(0, sf::Vector2f(x - widthHorizontal / 2, y));
     horizontalBody.setPoint(1, sf::Vector2f(x + widthHorizontal / 2, y));
@@ -23,7 +22,6 @@ Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, f
     horizontalBody.setPoint(3, sf::Vector2f(x - widthHorizontal / 2, y + heightHorizontal));
     horizontalBody.setFillColor(sf::Color(208, 208, 225));
 
-    // Initialize left wheel
     leftWheel.setRadius(heightHorizontal / 2); // Wheels are proportional to horizontal body height
     leftWheel.setFillColor(sf::Color::Black);
     leftWheel.setOrigin(leftWheel.getRadius(), leftWheel.getRadius()); // Center the wheel

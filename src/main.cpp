@@ -9,6 +9,29 @@
 
 using namespace  std;
 
+
+ObstacleFactory initializeFactory(ObstacleContainer* container, FallingObstacleContainer* fallingContainer){
+    const float screenWidth = 800.0f;
+    const float screenHeight = 600.0f;
+    const float gameTime = 0.0f; // Start game time at 0
+
+    // Number of obstacles per screen
+    const int numWalls = 5;
+    const int numSpikeWalls = 3;
+    const int numFallingObjects = 4;
+
+
+    // Initialize the ObstacleFactory
+    ObstacleFactory factory(
+        numWalls, numSpikeWalls, numFallingObjects,
+        screenWidth, screenHeight, gameTime,
+        container, fallingContainer
+    );
+
+    return factory;
+}
+
+
 int main() {
     // Create a window
     sf::RenderWindow window(sf::VideoMode(800, 600), "Obstacle Container Example");
@@ -16,24 +39,26 @@ int main() {
 
     sf::Clock clock;
 
-    ObstacleContainer container;
+    auto container = ObstacleContainer();
+    auto fallingContainer = FallingObstacleContainer();
 
-    FallingObstacleContainer fallContainer;
-
+    ObstacleFactory factory = initializeFactory(&container, &fallingContainer);
 
     // Create a vehicle
-    Vehicle vehicle(400, 500, 30, 80, 30, 20);
+    Vehicle vehicle(400, 560, 30, 80, 30, 20);
 
     // Add walls to the container
+    /*
     container.addObstacle(make_unique<Wall>(Wall(100.0f, 20.0f, 200.0f, 500.0f)));
     container.addObstacle(make_unique<Wall>(Wall(150.0f, 25.0f, 400.0f, 500.0f)));
     container.addObstacle(make_unique<Wall>(Wall(120.0f, 30.0f, 600.0f, 500.0f)));
     container.addObstacle(make_unique<SpikeWall>(SpikeWall(80, 50, 300, 550,
     20,40, sf::Color(135, 135, 171))));
+     */
 
-    fallContainer.addObstacle(make_unique<FallingObstacle>(40, 50, 2, 100, 0.5));
-    fallContainer.addObstacle(make_unique<FallingObstacle>(40, 50, 2, 200, 1));
-    fallContainer.addObstacle(make_unique<FallingObstacle>(40, 50, 2, 700, 2));
+    fallingContainer.addObstacle(make_unique<FallingObstacle>(100, 100, 2, 100, 0.5));
+    fallingContainer.addObstacle(make_unique<FallingObstacle>(100, 100, 2, 200, 1));
+    fallingContainer.addObstacle(make_unique<FallingObstacle>(100, 100, 2, 700, 2));
 
     float totalTimeElapsed = 0;
 
@@ -63,7 +88,7 @@ int main() {
                 }
                 else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)){
                     //vehicle.move(10, -40);
-                    vehicle.jump(10, 100);
+                    vehicle.jump(100, 200);
                 }
             }
         }
@@ -76,13 +101,13 @@ int main() {
 
         // Draw everything
         container.drawAll(window);
-        fallContainer.drawAll(window);
+        fallingContainer.drawAll(window);
         vehicle.draw(window);
 
         // Move all obstacles to the left
         container.moveAll(-1.0f, 0.0f);
-        fallContainer.activate(totalTimeElapsed);
-        fallContainer.fallAll();
+        fallingContainer.activate(totalTimeElapsed);
+        fallingContainer.fallAll();
 
         // Display the frame
         window.display();
