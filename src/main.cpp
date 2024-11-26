@@ -56,8 +56,8 @@ int main() {
     20,40, sf::Color(135, 135, 171))));
      */
 
-    fallingContainer.addObstacle(make_unique<FallingObstacle>(100, 100, 2, 100, 0.5));
-    fallingContainer.addObstacle(make_unique<FallingObstacle>(100, 100, 2, 200, 1));
+    fallingContainer.addObstacle(make_unique<FallingObstacle>(100, 100, 2, 100, 100));
+    fallingContainer.addObstacle(make_unique<FallingObstacle>(100, 100, 2, 200, 100));
     fallingContainer.addObstacle(make_unique<FallingObstacle>(100, 100, 2, 700, 2));
 
     float totalTimeElapsed = 0;
@@ -88,7 +88,7 @@ int main() {
                 }
                 else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)){
                     //vehicle.move(10, -40);
-                    vehicle.jump(100, 200);
+                    vehicle.jump(250, 300);
                 }
             }
         }
@@ -105,8 +105,8 @@ int main() {
         vehicle.draw(window);
 
         // Move all obstacles to the left
-        container.moveAll(-1.0f, 0.0f);
-        fallingContainer.activate(totalTimeElapsed);
+        container.moveAll(-2.0f, 0.0f);
+        fallingContainer.activate(vehicle.getPosition().x);
         fallingContainer.fallAll();
 
         // Display the frame

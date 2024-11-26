@@ -61,7 +61,6 @@ SpikeWall::SpikeWall(float baseWidth, float baseHeight, float x, float y, float 
     base.setPosition(x, y);
     base.setFillColor(sf::Color::Green);
 
-    // Create spikes on top of the base
     int numSpikes = static_cast<int>(baseWidth / spikeWidth);
     for (int i = 0; i < numSpikes; ++i) {
         sf::ConvexShape spike(3); // Triangular spike
@@ -73,11 +72,12 @@ SpikeWall::SpikeWall(float baseWidth, float baseHeight, float x, float y, float 
     }
 }
 
+
 SpikeWall::SpikeWall(float baseWidth, float baseHeight, float x, float y, float spikeWidth, float spikeHeight,
                      sf::Color color)
     : spikeWidth(spikeWidth), spikeHeight(spikeHeight) {
     // Initialize the base platform
-    base.setSize(sf::Vector2f(baseWidth, baseHeight));
+    base.setSize(sf::Vector2f(baseWidth, baseHeight + 100));
     base.setPosition(x, y);
     base.setFillColor(color);
 
@@ -143,12 +143,14 @@ bool SpikeWall::checkCollision(sf::Vector2f playerPos, float playerWidth, float 
 
 
 FallingObstacle::FallingObstacle(float baseWidth, float baseHeight, float fallingSpeed, float x, float
-            activationTimeSeconds):
- fallingSpeed(fallingSpeed), inScreen(false), activationTimeSeconds(activationTimeSeconds) {
-    //std::srand(static_cast<unsigned>(0));
-    int numPoints = std::rand() % 20;
+            activationDistance):
+ fallingSpeed(fallingSpeed), inScreen(false), activationDistance(activationDistance) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> pointsDis(3,4);
+    int numPoints = pointsDis(gen);
     base.setPointCount(numPoints);
-
+    std::cout << "Num points " << numPoints << "\n";
     for (int i = 0; i < numPoints; i++){
         float x = static_cast<float>(std::rand() % static_cast<int>(baseWidth));
         float y = static_cast<float>(std::rand() % static_cast<int>(baseHeight));
@@ -184,8 +186,8 @@ bool FallingObstacle::checkCollision(sf::Vector2f playerPos, float playerWidth, 
     return false;
 }
 
-float FallingObstacle::getActivationTime() const {
-    return activationTimeSeconds;
+float FallingObstacle::getActivationDistance() const {
+    return activationDistance;
 }
 
 float FallingObstacle::getFallingSpeed() const {
@@ -236,9 +238,9 @@ void FallingObstacleContainer::addObstacle(std::unique_ptr<FallingObstacle> obs)
 }
 
 
-void FallingObstacleContainer::activate(float elapsedTimeSeconds) const {
+void FallingObstacleContainer::activate(float xPosition) const {
     for (auto& obstacle : obstacles) { // Use a reference here
-        if (elapsedTimeSeconds >= obstacle->getActivationTime()) {
+        if (abs(xPosition - obstacle->getPosition().x) <= obstacle->getActivationDistance()) {
             obstacle->setInScreen(true);
         }
     }
@@ -270,19 +272,38 @@ ObstacleFactory::ObstacleFactory(int numWalls, int numSpikeWalls, int numFalling
       container(container), fallingContainer(fallingContainer) {
 
       createWalls();
+      //createFallingObjects();
 }
 
 
 void ObstacleFactory::createWalls() {
     int maxWalls = 30; //hard code
     int gapAccumulator = 0;
+    srand( (unsigned)time( NULL ) );
 
+ std::cout << RAND_MAX << "\n";
     for (int i = 0; i < maxWalls; i++){
+    float r = (float) rand()/RAND_MAX;
+    std::cout << r << "\n";
+    if (r < 0.5){
+
         container->addObstacle(std::move(createRandomWall(i, 100, 200, gapAccumulator)));
+    }else {
+        container->addObstacle(std::move(createRandomSpikeWall(i, 90, 100, gapAccumulator)));
     }
 
-
+    }
 }
+
+void ObstacleFactory::createFallingObjects() {
+    int maxObjects = 30; //hard code
+    int gapAccumulator = 0;
+
+    for (int i = 0; i < maxObjects; i++){
+        fallingContainer->addObstacle(std::move(createRandomFallingObject(i, 60, 60, gapAccumulator)));
+    }
+}
+
 
 std::unique_ptr<Wall> ObstacleFactory::createRandomWall(int x, int maxWidth, int maxHeight, int& gap) const {
     std::random_device rd;
@@ -304,6 +325,50 @@ std::unique_ptr<Wall> ObstacleFactory::createRandomWall(int x, int maxWidth, int
     return std::make_unique<Wall>(height, width, x, y);
 }
 
+
+std::unique_ptr<SpikeWall> ObstacleFactory::createRandomSpikeWall(int x, int maxWidth, int maxHeight, int &gap) const {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> disWidth(maxWidth, maxWidth);
+    std::uniform_int_distribution<> disHeight(50, maxHeight);
+    std::uniform_int_distribution<> disOffset(200, 400);
+
+    float width = disWidth(gen);
+    float height = disHeight(gen);
+    float spikeWidth = 10;
+    float spikeHeight = 40;
+
+
+    float y = heightScreen - height;
+    x += gap;
+    x += disOffset(gen);
+
+    gap = x + width;
+
+
+    return std::make_unique<SpikeWall>(height, width, x, y, spikeWidth, spikeHeight,
+                                        sf::Color(135, 135, 171));
+}
+
+std::unique_ptr<FallingObstacle> ObstacleFactory::createRandomFallingObject(int x, int maxWidth, int maxHeight,
+int &gap) const {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> disWidth(50, maxWidth);
+    std::uniform_int_distribution<> disHeight(50, maxHeight);
+    std::uniform_int_distribution<> disOffset(200, 400);
+
+    float width = disWidth(gen);
+    float height = disHeight(gen);
+
+    x += gap;
+    x += disOffset(gen);
+
+    gap = x + width;
+
+    //TODO: remove hardcoded values
+    return std::make_unique<FallingObstacle>(height, width, 2, 100, x);
+}
 
 
 

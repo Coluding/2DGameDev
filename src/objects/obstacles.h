@@ -62,11 +62,11 @@ private:
     sf::ConvexShape base;
     float fallingSpeed;
     bool inScreen;
-    float activationTimeSeconds;
+    float activationDistance;
 
 
 public:
-    FallingObstacle(float baseWidth, float baseHeight, float fallingSpeed, float x, float activationTimeSeconds);
+    FallingObstacle(float baseWidth, float baseHeight, float fallingSpeed, float x, float activationDistance);
 
     void setPosition(float x, float y) override;
     const sf::Vector2f getPosition() const override;
@@ -75,7 +75,7 @@ public:
     bool checkCollision(sf::Vector2f playerPos, float playerWidth, float playerHeight) override;
     const void draw(sf::RenderWindow &window) const override;
     ~FallingObstacle() override = default;
-    float getActivationTime() const ;
+    float getActivationDistance() const ;
     float getFallingSpeed() const;
     bool isInScreen() const;
     void setInScreen(bool val);
@@ -103,7 +103,7 @@ std::vector<std::unique_ptr<FallingObstacle>> obstacles;
 public:
     void addObstacle(std::unique_ptr<FallingObstacle>);
     void fallAll() const;
-    void activate(float elapsedTimeSeconds) const;
+    void activate(float xPosition) const;
     void drawAll(sf::RenderWindow& window) const;
     void clear();
 };
@@ -128,6 +128,8 @@ public:
     void createSpikeWalls();
     void createFallingObjects();
     std::unique_ptr<Wall>  createRandomWall(int x, int maxWidth, int maxHeight, int& gap) const;
+    std::unique_ptr<SpikeWall> createRandomSpikeWall(int x, int maxWidth, int maxHeight, int& gap) const;
+    std::unique_ptr<FallingObstacle> createRandomFallingObject(int x, int maxWidth, int maxHeight, int& gap) const;
 
 };
 
