@@ -48,7 +48,26 @@ void Wall::setColor(sf::Color color){
     wall.setFillColor(color);
 }
 
-bool Wall::checkCollision(sf::Vector2f playerPos, float playerWidth, float playerHeight){
+bool Wall::checkCollision(Vehicle& vehicle){
+    // Update the player position if it lands on the wall
+
+    float wheelX = 0.0f, wheelY = 0.0f, verticalBodyX = 0.0f, verticalBodyY = 0.0f,
+        horizontalBodyX = 0.0f, horizontalBodyY = 0.0f;
+
+    vehicle.getFullPosition(wheelX, wheelY, verticalBodyX, verticalBodyY, horizontalBodyX, horizontalBodyY);
+
+    float yPos = wheelY + vehicle.getWheelRadius();
+    float xPos = wheelX + vehicle.getWheelRadius();
+
+    bool yIntervall = yPos <= wall.getPosition().y - wall.getSize().y && yPos >= wall.getPosition().y;
+    bool xIntervall = xPos >= wall.getPosition().x && xPos <= wall.getPosition().x + wall.getSize().x;
+
+    if ( yIntervall && xIntervall) {
+        vehicle.interruptJump();
+        vehicle.setPosition(vehicle.getPosition().x, wall.getPosition().y - vehicle.getWheelRadius());
+        return true;
+    }
+
     return false;
 }
 
@@ -137,24 +156,40 @@ const sf::Vector2f SpikeWall::getPosition() const {
     return base.getPosition();
 }
 
-bool SpikeWall::checkCollision(sf::Vector2f playerPos, float playerWidth, float playerHeight) {
+bool SpikeWall::checkCollision(Vehicle& vehicle) {
     return false;
 }
 
 
-FallingObstacle::FallingObstacle(float baseWidth, float baseHeight, float fallingSpeed, float x, float
-            activationDistance):
- fallingSpeed(fallingSpeed), inScreen(false), activationDistance(activationDistance) {
+FallingObstacle::FallingObstacle(float baseWidth, float baseHeight, float fallingSpeed, float x, float activationDistance)
+    : fallingSpeed(fallingSpeed), inScreen(false), activationDistance(activationDistance) {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> pointsDis(3,4);
-    int numPoints = pointsDis(gen);
-    base.setPointCount(numPoints);
-    std::cout << "Num points " << numPoints << "\n";
-    for (int i = 0; i < numPoints; i++){
-        float x = static_cast<float>(std::rand() % static_cast<int>(baseWidth));
-        float y = static_cast<float>(std::rand() % static_cast<int>(baseHeight));
-        base.setPoint(i, sf::Vector2f(x,y));
+    std::uniform_int_distribution<> spikesDis(5, 8); // Number of spikes on the star (odd is recommended)
+    int numSpikes = spikesDis(gen);
+
+    // Ensure an odd number of points for symmetry
+    if (numSpikes % 2 == 0) {
+        numSpikes += 1;
+    }
+
+    base.setPointCount(numSpikes * 2); // Double for inner and outer points
+
+    float radiusOuter = baseWidth / 2.0f;  // Outer radius
+    float radiusInner = baseHeight / 2.5f; // Inner radius (smaller than outer)
+    float centerX = baseWidth / 2.0f;      // Center x
+    float centerY = baseHeight / 2.0f;     // Center y
+
+    // Generate star points
+    for (int i = 0; i < numSpikes * 2; i++) {
+        float angle = i * (360.0f / (numSpikes * 2)); // Divide full circle evenly
+        float radians = angle * (3.14159f / 180.0f);  // Convert to radians
+
+        float radius = (i % 2 == 0) ? radiusOuter : radiusInner; // Alternate radii
+        float px = centerX + radius * cos(radians);
+        float py = centerY + radius * sin(radians);
+
+        base.setPoint(i, sf::Vector2f(px, py));
     }
 
     base.setPosition(x, -10000);
@@ -182,7 +217,7 @@ void FallingObstacle::setDeltaPosition(float dx, float dy) {
     base.move(dx, dy);
 }
 
-bool FallingObstacle::checkCollision(sf::Vector2f playerPos, float playerWidth, float playerHeight) {
+bool FallingObstacle::checkCollision(Vehicle& vehicle) {
     return false;
 }
 
@@ -231,6 +266,17 @@ void ObstacleContainer::clear() {
     obstacles.clear();
 }
 
+bool ObstacleContainer::checkCollision(Vehicle& vehicle) {
+    for (auto &obstacle: obstacles){
+        if (vehicle.getPosition().x < obstacle->getPosition().x - 500) {
+
+            if (obstacle->checkCollision(vehicle)){
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 
 void FallingObstacleContainer::addObstacle(std::unique_ptr<FallingObstacle> obs) {
@@ -272,7 +318,7 @@ ObstacleFactory::ObstacleFactory(int numWalls, int numSpikeWalls, int numFalling
       container(container), fallingContainer(fallingContainer) {
 
       createWalls();
-      //createFallingObjects();
+      createFallingObjects();
 }
 
 
@@ -357,6 +403,9 @@ int &gap) const {
     std::uniform_int_distribution<> disWidth(50, maxWidth);
     std::uniform_int_distribution<> disHeight(50, maxHeight);
     std::uniform_int_distribution<> disOffset(200, 400);
+    std::uniform_int_distribution<> xPosOffset(5, 30);
+
+    int xPos = (x + xPosOffset(gen)) * 100;
 
     float width = disWidth(gen);
     float height = disHeight(gen);
@@ -367,7 +416,7 @@ int &gap) const {
     gap = x + width;
 
     //TODO: remove hardcoded values
-    return std::make_unique<FallingObstacle>(height, width, 2, 100, x);
+    return std::make_unique<FallingObstacle>(height, width, 2, xPos, 100);
 }
 
 

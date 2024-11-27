@@ -3,6 +3,7 @@
 #include <iostream>
 #include "objects/obstacles.h"
 #include "player/character.h"
+#include "player/camera.h"
 
 #include <cmath>
 #include <math.h>
@@ -45,7 +46,7 @@ int main() {
     ObstacleFactory factory = initializeFactory(&container, &fallingContainer);
 
     // Create a vehicle
-    Vehicle vehicle(400, 560, 30, 80, 30, 20);
+    Vehicle vehicle(0, 560, 30, 80, 30, 20, 600);
 
     // Add walls to the container
     /*
@@ -56,9 +57,16 @@ int main() {
     20,40, sf::Color(135, 135, 171))));
      */
 
-    fallingContainer.addObstacle(make_unique<FallingObstacle>(100, 100, 2, 100, 100));
-    fallingContainer.addObstacle(make_unique<FallingObstacle>(100, 100, 2, 200, 100));
-    fallingContainer.addObstacle(make_unique<FallingObstacle>(100, 100, 2, 700, 2));
+    //fallingContainer.addObstacle(make_unique<FallingObstacle>(100, 100, 2, 500, 100));
+    //fallingContainer.addObstacle(make_unique<FallingObstacle>(100, 100, 2, 700, 100));
+    //fallingContainer.addObstacle(make_unique<FallingObstacle>(100, 100, 2, 900, 100));
+
+    // Define the world size (e.g., larger than the screen)
+    float worldWidth = 16000.0f; // Example world width
+    float worldHeight = 600.0f; // Example world height
+
+    // Create the camera
+    Camera camera(800.0f, 600.0f, worldWidth, worldHeight);
 
     float totalTimeElapsed = 0;
 
@@ -72,21 +80,17 @@ int main() {
             if (event.type == sf::Event::Closed) {
                 window.close();
             }
-            if (event.type == sf::Event::KeyPressed){
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)){
+            if (event.type == sf::Event::KeyPressed) {
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
                     vehicle.move(0, -10);
-                }
-                else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)){
+                } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
                     vehicle.move(0, 10);
-                }
-                else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)){
+                } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
                     vehicle.move(10, 0);
-                }
-                else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)){
+                } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
                     vehicle.move(-10, 0);
                     std::cout << vehicle.getPosition().x << " " << vehicle.getPosition().y;
-                }
-                else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)){
+                } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
                     //vehicle.move(10, -40);
                     vehicle.jump(250, 300);
                 }
@@ -96,23 +100,29 @@ int main() {
         vehicle.update(deltaTime);
         totalTimeElapsed += deltaTime;
 
+        // Update the camera to follow the player
+        camera.update(vehicle.getPosition());
+
+        // Apply the camera view to the window
+        camera.applyTo(window);
+
         // Clear the window
         window.clear(sf::Color::White);
 
         // Draw everything
         container.drawAll(window);
+        container.checkCollision(vehicle);
         fallingContainer.drawAll(window);
         vehicle.draw(window);
 
         // Move all obstacles to the left
-        container.moveAll(-2.0f, 0.0f);
+        //container.moveAll(-2.0f, 0.0f);
         fallingContainer.activate(vehicle.getPosition().x);
         fallingContainer.fallAll();
 
         // Display the frame
         window.display();
     }
-
 
     return 0;
 }

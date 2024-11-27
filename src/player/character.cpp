@@ -1,10 +1,10 @@
 #include "character.h"
 #include <iostream>
-
+#include <cmath>
 // Constructor
-Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, float heightVertical, float heightHorizontal)
-    : wheelRotationSpeed(100.0f) { // Initialize wheel rotation speed
-    // Initialize vertical body (rectangle-like)
+Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, float heightVertical, float heightHorizontal, float screenHeight)
+    : wheelRotationSpeed(100.0f), widthVertical(widthVertical), allowDown(true), allowLeft(true), allowRight(true),
+    allowUp(true){
     verticalBody.setPointCount(6);
     verticalBody.setPoint(0, sf::Vector2f(x - widthVertical / 2, y - heightVertical));
     verticalBody.setPoint(1, sf::Vector2f(x + widthVertical / 2, y - heightVertical));
@@ -22,7 +22,7 @@ Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, f
     horizontalBody.setPoint(3, sf::Vector2f(x - widthHorizontal / 2, y + heightHorizontal));
     horizontalBody.setFillColor(sf::Color(208, 208, 225));
 
-    leftWheel.setRadius(heightHorizontal / 2); // Wheels are proportional to horizontal body height
+    leftWheel.setRadius(heightHorizontal / 2);
     leftWheel.setFillColor(sf::Color::Black);
     leftWheel.setOrigin(leftWheel.getRadius(), leftWheel.getRadius()); // Center the wheel
     leftWheel.setPosition(x - widthHorizontal / 4, y + heightHorizontal + leftWheel.getRadius());
@@ -34,6 +34,8 @@ Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, f
     rightWheel.setFillColor(sf::Color::Black);
     rightWheel.setOrigin(rightWheel.getRadius(), rightWheel.getRadius());
     rightWheel.setPosition(x + widthHorizontal / 4, y + heightHorizontal + rightWheel.getRadius());
+
+    screenHeight = screenHeight - heightVertical;
 }
 
 // Update the vehicle (e.g., rotate the wheels)
@@ -81,7 +83,10 @@ void Vehicle::draw(sf::RenderWindow& window) {
 }
 
 void Vehicle::setPosition(float x, float y) {
-    // Calculate the offsets for the vertical and horizontal bodies
+    if (x > widthVertical + 50) {
+        x = widthVertical + 50;
+    }
+
     sf::Vector2f verticalOffset = verticalBody.getPosition() - sf::Vector2f(x, y);
     sf::Vector2f horizontalOffset = horizontalBody.getPosition() - sf::Vector2f(x, y);
     sf::Vector2f leftWheelOffset = leftWheel.getPosition() - sf::Vector2f(x,y);
@@ -97,6 +102,21 @@ void Vehicle::setPosition(float x, float y) {
 }
 
 void Vehicle::move(float dx, float dy) {
+
+    if (getPosition().y + dy > screenHeight) {
+        dy = 0;
+    };
+
+    if (dx > 0 && !allowRight) {
+        dx = 0;
+    } else if (dx < 0 && !allowLeft) {
+        dx = 0;
+    }else if (dy > 0 && !allowDown) {
+        dy = 0;
+    } else if (dy < 0 && !allowUp) {
+        dy = 0;
+    }
+
     verticalBody.move(dx, dy);
     horizontalBody.move(dx, dy);
     leftWheel.move(dx, dy);
@@ -119,6 +139,7 @@ void Vehicle::jump(float dx, float height) {
     jumpStartPos = getPosition();
     jumpDx = dx;
     jumpHeight = height;
+
 }
 
 void Vehicle::updateIntersectionLine() {
@@ -139,3 +160,22 @@ void Vehicle::updateIntersectionLine() {
     leftWheelIntersectionLine[1].color = sf::Color::Red;
 }
 
+void Vehicle::getFullPosition(float &wheelX, float &wheelY, float &verticalBodyX, float &verticalBodyY, float &horizontalBodyX, float &horizontalBodyY) const {
+
+    wheelX = leftWheel.getPosition().x;
+    wheelY = leftWheel.getPosition().y;
+    verticalBodyX = verticalBody.getPosition().x;
+    verticalBodyY = verticalBody.getPosition().y;
+    horizontalBodyX = horizontalBody.getPosition().x;
+    horizontalBodyY = horizontalBody.getPosition().y;
+
+
+}
+
+float Vehicle::getWheelRadius() const {
+    return leftWheel.getRadius();
+}
+
+void Vehicle::interruptJump() {
+    isJumping = false;
+}

@@ -8,6 +8,7 @@
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/System/Vector2.hpp>
 #include <memory>
+#include "../player/character.h"
 
 class Obstacle {
 public:
@@ -17,7 +18,7 @@ public:
     virtual void setDeltaPosition(float x, float y) = 0;
     virtual const sf::Vector2f getPosition() const = 0;
     virtual void setColor(sf::Color) = 0;
-    virtual bool checkCollision(sf::Vector2f playerPos, float playerWidth, float playerHeight) = 0;
+    virtual bool checkCollision(Vehicle& vehicle)  = 0;
 };
 
 class Wall : public Obstacle{
@@ -32,7 +33,7 @@ public:
     void setDeltaPosition(float x, float y) override;
     const sf::Vector2f getPosition() const override;
     void setColor(sf::Color) override;
-    bool checkCollision(sf::Vector2f playerPos, float playerWidth, float playerHeight) override;
+    bool checkCollision(Vehicle& vehicle) override;
     ~Wall() override = default;
 
 };
@@ -52,7 +53,7 @@ public:
     const sf::Vector2f getPosition() const override;
     void setDeltaPosition(float dx, float dy) override;
     void setColor(sf::Color color) override;
-    bool checkCollision(sf::Vector2f playerPos, float playerWidth, float playerHeight) override;
+    bool checkCollision(Vehicle& vehicle)  override;
     const void draw(sf::RenderWindow &window) const override;
     ~SpikeWall() override = default;
 };
@@ -72,7 +73,7 @@ public:
     const sf::Vector2f getPosition() const override;
     void setDeltaPosition(float dx, float dy) override;
     void setColor(sf::Color color) override;
-    bool checkCollision(sf::Vector2f playerPos, float playerWidth, float playerHeight) override;
+    bool checkCollision(Vehicle& vehicle)  override;
     const void draw(sf::RenderWindow &window) const override;
     ~FallingObstacle() override = default;
     float getActivationDistance() const ;
@@ -94,6 +95,8 @@ public:
     void drawAll(sf::RenderWindow& window) const;
 
     void clear();
+
+    bool checkCollision(Vehicle& vehicle);
 
 };
 

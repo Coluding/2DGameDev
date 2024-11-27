@@ -16,10 +16,19 @@ private:
     float jumpDx = 0.0f;
     float jumpHeight = 0.0f;
     float wheelRotationSpeed;
+    float gamePosition;
+    float widthVertical;
+    float screenHeight;
+    bool allowDown;
+    bool allowUp;
+    bool allowLeft;
+    bool allowRight;
+
     sf::VertexArray leftWheelIntersectionLine;
 
 public:
-    Vehicle(float x, float y, float widthVertical, float widthHoriztonal, float heightVertical, float heightHorizontal);
+    Vehicle(float x, float y, float widthVertical, float widthHoriztonal, float heightVertical, float heightHorizontal,
+        float screenHeight);
 
     void update(float deltaTime);
 
@@ -35,6 +44,12 @@ public:
 
     void updateIntersectionLine();
 
+    void getFullPosition(float& wheelX, float& wheelY, float& verticalBodyX, float& verticalBodyY,
+        float& horizontalBodyX, float& horizontalBodyY) const;
+
+    void interruptJump();
+
+    float getWheelRadius() const;
 
 };
 
