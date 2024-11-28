@@ -92,7 +92,7 @@ int main() {
                     std::cout << vehicle.getPosition().x << " " << vehicle.getPosition().y;
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
                     //vehicle.move(10, -40);
-                    vehicle.jump(250, 300);
+                    vehicle.jump(350, 350);
                 }
             }
         }

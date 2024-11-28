@@ -4,7 +4,7 @@
 // Constructor
 Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, float heightVertical, float heightHorizontal, float screenHeight)
     : wheelRotationSpeed(100.0f), widthVertical(widthVertical), allowDown(true), allowLeft(true), allowRight(true),
-    allowUp(true){
+    allowUp(true), gravity(100), verticalSpeed(0.0f), isOnGround(false){
     verticalBody.setPointCount(6);
     verticalBody.setPoint(0, sf::Vector2f(x - widthVertical / 2, y - heightVertical));
     verticalBody.setPoint(1, sf::Vector2f(x + widthVertical / 2, y - heightVertical));
@@ -40,6 +40,14 @@ Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, f
 
 // Update the vehicle (e.g., rotate the wheels)
 void Vehicle::update(float deltaTime) {
+    if (!isOnGround) {
+        // Apply gravity
+        move(0, gravity * deltaTime);
+    } else {
+        verticalSpeed = 0; // Reset vertical speed when on the ground
+    }
+
+    // Existing jump logic
     if (isJumping) {
         jumpTime += deltaTime;
         float t = jumpTime / totalJumpTime;
@@ -56,10 +64,11 @@ void Vehicle::update(float deltaTime) {
         move(dx, dy);
 
         // End jump if time is up
+        // if the jump does not land on the ground, continue the jump
         if (t >= 1.0f) {
             isJumping = false;
 
-            // Ensure final position is accurate
+            // Ensure final position is accura
             float finalDx = (jumpStartPos.x + jumpDx) - getPosition().x;
             float finalDy = jumpStartPos.y - getPosition().y;
             move(finalDx, finalDy);
@@ -69,8 +78,12 @@ void Vehicle::update(float deltaTime) {
         float rotation = wheelRotationSpeed * deltaTime;
         leftWheel.rotate(rotation);
         rightWheel.rotate(rotation);
-
     }
+}
+
+// Method to set the on-ground state
+void Vehicle::setOnGround(bool onGround) {
+    isOnGround = onGround;
 }
 
 // Draw the vehicle
@@ -83,22 +96,18 @@ void Vehicle::draw(sf::RenderWindow& window) {
 }
 
 void Vehicle::setPosition(float x, float y) {
-    if (x > widthVertical + 50) {
-        x = widthVertical + 50;
-    }
+    // Calculate the offset for each component relative to the new position
+    sf::Vector2f verticalBodyOffset = verticalBody.getPosition() - leftWheel.getPosition();
+    sf::Vector2f horizontalBodyOffset = horizontalBody.getPosition() - leftWheel.getPosition();
+    sf::Vector2f rightWheelOffset = rightWheel.getPosition() - leftWheel.getPosition();
 
-    sf::Vector2f verticalOffset = verticalBody.getPosition() - sf::Vector2f(x, y);
-    sf::Vector2f horizontalOffset = horizontalBody.getPosition() - sf::Vector2f(x, y);
-    sf::Vector2f leftWheelOffset = leftWheel.getPosition() - sf::Vector2f(x,y);
-    sf::Vector2f rightWeelOffset = rightWheel.getPosition() - sf::Vector2f(x,y);
+    // Update the position of the left wheel (base position)
+    leftWheel.setPosition(x, y);
 
-    verticalBody.setPosition(x - verticalOffset.x, y - verticalOffset.y);
-    horizontalBody.setPosition(x - horizontalOffset.x, y - horizontalOffset.y);
-
-    leftWheel.setPosition(x - leftWheelOffset.x, y - leftWheelOffset.y);
-    rightWheel.setPosition(x - rightWeelOffset.x, y - rightWeelOffset.y);
-
-    //rightWheel.setPosition(x + horizontalOffset.x / 2, y + horizontalOffset.y + rightWheel.getRadius());
+    // Update the positions of other components relative to the left wheel
+    verticalBody.setPosition(x + verticalBodyOffset.x, y + verticalBodyOffset.y);
+    horizontalBody.setPosition(x + horizontalBodyOffset.x, y + horizontalBodyOffset.y);
+    rightWheel.setPosition(x + rightWheelOffset.x, y + rightWheelOffset.y);
 }
 
 void Vehicle::move(float dx, float dy) {
@@ -168,6 +177,8 @@ void Vehicle::getFullPosition(float &wheelX, float &wheelY, float &verticalBodyX
     verticalBodyY = verticalBody.getPosition().y;
     horizontalBodyX = horizontalBody.getPosition().x;
     horizontalBodyY = horizontalBody.getPosition().y;
+
+
 
 
 }

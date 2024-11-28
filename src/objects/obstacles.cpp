@@ -48,24 +48,28 @@ void Wall::setColor(sf::Color color){
     wall.setFillColor(color);
 }
 
-bool Wall::checkCollision(Vehicle& vehicle){
-    // Update the player position if it lands on the wall
-
+bool Wall::checkCollision(Vehicle& vehicle) {
     float wheelX = 0.0f, wheelY = 0.0f, verticalBodyX = 0.0f, verticalBodyY = 0.0f,
-        horizontalBodyX = 0.0f, horizontalBodyY = 0.0f;
+          horizontalBodyX = 0.0f, horizontalBodyY = 0.0f;
 
     vehicle.getFullPosition(wheelX, wheelY, verticalBodyX, verticalBodyY, horizontalBodyX, horizontalBodyY);
 
-    float yPos = wheelY + vehicle.getWheelRadius();
-    float xPos = wheelX + vehicle.getWheelRadius();
+    float wheelBottomY = wheelY + vehicle.getWheelRadius();
+    float wallTopY = getPosition().y;
+    float wallBottomY = wallTopY + wall.getSize().y;
+    float wallLeftX = getPosition().x;
+    float wallRightX = wallLeftX + wall.getSize().x;
 
-    bool yIntervall = yPos <= wall.getPosition().y - wall.getSize().y && yPos >= wall.getPosition().y;
-    bool xIntervall = xPos >= wall.getPosition().x && xPos <= wall.getPosition().x + wall.getSize().x;
+    bool withinXBounds = (wheelX + vehicle.getWheelRadius() > wallLeftX &&
+                          wheelX - vehicle.getWheelRadius() < wallRightX);
+    bool withinYBounds = (wheelBottomY >= wallTopY && wheelY < wallBottomY);
 
-    if ( yIntervall && xIntervall) {
-        vehicle.interruptJump();
-        vehicle.setPosition(vehicle.getPosition().x, wall.getPosition().y - vehicle.getWheelRadius());
+    if (withinXBounds && withinYBounds) {
+        vehicle.setOnGround(true); // Vehicle is on the ground
+        vehicle.setPosition(vehicle.getPosition().x, wallTopY - vehicle.getWheelRadius());
         return true;
+    } else {
+        vehicle.setOnGround(false); // Vehicle is not on the ground
     }
 
     return false;
@@ -268,7 +272,7 @@ void ObstacleContainer::clear() {
 
 bool ObstacleContainer::checkCollision(Vehicle& vehicle) {
     for (auto &obstacle: obstacles){
-        if (vehicle.getPosition().x < obstacle->getPosition().x - 500) {
+        if (vehicle.getPosition().x > obstacle->getPosition().x - 500) {
 
             if (obstacle->checkCollision(vehicle)){
                 return true;
@@ -333,7 +337,7 @@ void ObstacleFactory::createWalls() {
     std::cout << r << "\n";
     if (r < 0.5){
 
-        container->addObstacle(std::move(createRandomWall(i, 100, 200, gapAccumulator)));
+        container->addObstacle(std::move(createRandomWall(i, 150, 200, gapAccumulator)));
     }else {
         container->addObstacle(std::move(createRandomSpikeWall(i, 90, 100, gapAccumulator)));
     }
@@ -354,7 +358,7 @@ void ObstacleFactory::createFallingObjects() {
 std::unique_ptr<Wall> ObstacleFactory::createRandomWall(int x, int maxWidth, int maxHeight, int& gap) const {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> disWidth(50, maxWidth);
+    std::uniform_int_distribution<> disWidth(80, maxWidth);
     std::uniform_int_distribution<> disHeight(50, maxHeight);
     std::uniform_int_distribution<> disOffset(200, 400);
 

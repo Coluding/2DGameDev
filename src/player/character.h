@@ -23,6 +23,9 @@ private:
     bool allowUp;
     bool allowLeft;
     bool allowRight;
+    float gravity;
+    float verticalSpeed;
+    bool isOnGround;
 
     sf::VertexArray leftWheelIntersectionLine;
 
@@ -50,6 +53,8 @@ public:
     void interruptJump();
 
     float getWheelRadius() const;
+
+    void setOnGround(bool onGround);
 
 };
 
