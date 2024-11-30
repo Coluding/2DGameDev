@@ -64,12 +64,27 @@ bool Wall::checkCollision(Vehicle& vehicle) {
                           wheelX - vehicle.getWheelRadius() < wallRightX);
     bool withinYBounds = (wheelBottomY >= wallTopY && wheelY < wallBottomY);
 
-    if (withinXBounds && withinYBounds) {
-        vehicle.setOnGround(true); // Vehicle is on the ground
-        vehicle.setPosition(vehicle.getPosition().x, wallTopY - vehicle.getWheelRadius());
-        return true;
+    bool hitWallLeft = horizontalBodyX + (vehicle.widthHorizontal / 2) > wallLeftX - 10 && horizontalBodyX < wallLeftX + 10;
+    bool hitWallRight = horizontalBodyX - (vehicle.widthHorizontal / 2) < wallRightX + 10 && horizontalBodyX > wallRightX - 10;
+
+    if (hitWallLeft && wheelBottomY > wallTopY + 20) {
+        vehicle.ForbidRight();
     } else {
-        vehicle.setOnGround(false); // Vehicle is not on the ground
+        vehicle.AllowRight();
+    }
+
+    if (hitWallRight && wheelBottomY > wallTopY + 20) {
+        vehicle.ForbidLeft();
+    } else {
+        vehicle.AllowLeft();
+    }
+
+    if (withinXBounds && withinYBounds) {
+        vehicle.setOnGround(true);
+        vehicle.ForbidDown();
+    } else {
+        vehicle.setOnGround(false);
+        vehicle.AllowDown();
     }
 
     return false;
@@ -272,7 +287,7 @@ void ObstacleContainer::clear() {
 
 bool ObstacleContainer::checkCollision(Vehicle& vehicle) {
     for (auto &obstacle: obstacles){
-        if (vehicle.getPosition().x > obstacle->getPosition().x - 500) {
+        if (vehicle.getPosition().x > obstacle->getPosition().x - 200) {
 
             if (obstacle->checkCollision(vehicle)){
                 return true;

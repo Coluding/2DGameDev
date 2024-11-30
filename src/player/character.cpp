@@ -3,8 +3,8 @@
 #include <cmath>
 // Constructor
 Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, float heightVertical, float heightHorizontal, float screenHeight)
-    : wheelRotationSpeed(100.0f), widthVertical(widthVertical), allowDown(true), allowLeft(true), allowRight(true),
-    allowUp(true), gravity(100), verticalSpeed(0.0f), isOnGround(false){
+    : wheelRotationSpeed(100.0f), widthVertical(widthVertical),  widthHorizontal(widthHorizontal), allowDown(true), allowLeft(true), allowRight(true),
+    allowUp(true), gravity(160), verticalSpeed(0.0f), isOnGround(true){
     verticalBody.setPointCount(6);
     verticalBody.setPoint(0, sf::Vector2f(x - widthVertical / 2, y - heightVertical));
     verticalBody.setPoint(1, sf::Vector2f(x + widthVertical / 2, y - heightVertical));
@@ -38,52 +38,60 @@ Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, f
     screenHeight = screenHeight - heightVertical;
 }
 
-// Update the vehicle (e.g., rotate the wheels)
-void Vehicle::update(float deltaTime) {
+void Vehicle::update() {
     if (!isOnGround) {
-        // Apply gravity
-        move(0, gravity * deltaTime);
-    } else {
-        verticalSpeed = 0; // Reset vertical speed when on the ground
-    }
+        if (isJumping) {
+            // Increment jump progress
+            jumpProgress += jumpStepSize;
 
-    // Existing jump logic
-    if (isJumping) {
-        jumpTime += deltaTime;
-        float t = jumpTime / totalJumpTime;
+            float t = jumpProgress;
+            float newX = jumpStartPos.x + t * jumpDx;
+            float newY = jumpStartPos.y - jumpHeight * (1 - (2 * t - 1) * (2 * t - 1));
 
-        // Calculate the new position incrementally
-        float newX = jumpStartPos.x + t * jumpDx;
-        float newY = jumpStartPos.y - jumpHeight * (1 - (2 * t - 1) * (2 * t - 1));
+            // Determine movement delta
+            float dx = newX - getPosition().x;
+            float dy = newY - getPosition().y;
 
-        // Determine movement delta
-        float dx = newX - getPosition().x;
-        float dy = newY - getPosition().y;
+            // Use move to adjust position
+            move(dx, dy);
 
-        // Use move to adjust position seamlessly
-        move(dx, dy);
+            if (t >= 1.0f) {
+                isJumping = false;
 
-        // End jump if time is up
-        // if the jump does not land on the ground, continue the jump
-        if (t >= 1.0f) {
-            isJumping = false;
-
-            // Ensure final position is accura
-            float finalDx = (jumpStartPos.x + jumpDx) - getPosition().x;
-            float finalDy = jumpStartPos.y - getPosition().y;
-            move(finalDx, finalDy);
+                // Ensure final position is accurate
+                float finalDx = (jumpStartPos.x + jumpDx) - getPosition().x;
+                float finalDy = jumpStartPos.y - getPosition().y;
+                move(finalDx, finalDy);
+            }
+        } else {
+            // Apply gravity if not on the ground or jumping
+            move(0, gravity * jumpStepSize);
+            float rotation = wheelRotationSpeed * jumpStepSize;
+            leftWheel.rotate(rotation);
+            rightWheel.rotate(rotation);
         }
-    } else {
-        // Rotate wheels when not jumping
-        float rotation = wheelRotationSpeed * deltaTime;
-        leftWheel.rotate(rotation);
-        rightWheel.rotate(rotation);
     }
 }
 
+// Initiate the jump
+void Vehicle::jump(float dx, float height) {
+
+    //if (!isOnGround) return; // Prevent jumping if not on the ground
+
+    if (isJumping) return; // Prevent starting a new jump if already jumping
+
+    isJumping = true;
+    jumpProgress = 0.0f; // Reset progress
+    jumpStepSize = 0.025f; // Fixed step size per update (example value)
+    jumpStartPos = getPosition();
+    jumpDx = dx;
+    jumpHeight = height;
+    isOnGround = false;
+}
 // Method to set the on-ground state
 void Vehicle::setOnGround(bool onGround) {
     isOnGround = onGround;
+    //isJumping = false;
 }
 
 // Draw the vehicle
@@ -138,18 +146,6 @@ sf::Vector2f Vehicle::getPosition() const {
     return verticalBody.getPosition();
 }
 
-void Vehicle::jump(float dx, float height) {
-    if (isJumping) return; // Prevent starting a new jump if already jumping
-
-
-    isJumping = true;
-    jumpTime = 0.0f;
-    totalJumpTime = 1.0f; // Example duration: 1 second
-    jumpStartPos = getPosition();
-    jumpDx = dx;
-    jumpHeight = height;
-
-}
 
 void Vehicle::updateIntersectionLine() {
     // Get the left wheel's position
@@ -190,3 +186,36 @@ float Vehicle::getWheelRadius() const {
 void Vehicle::interruptJump() {
     isJumping = false;
 }
+
+void Vehicle::ForbidRight() {
+    allowRight = false;
+}
+
+void Vehicle::ForbidLeft() {
+    allowLeft = false;
+}
+
+void Vehicle::ForbidUp() {
+    allowUp = false;
+}
+
+void Vehicle::ForbidDown() {
+    allowDown = false;
+}
+
+void Vehicle::AllowRight() {
+    allowRight = true;
+}
+
+void Vehicle::AllowLeft() {
+    allowLeft = true;
+}
+
+void Vehicle::AllowUp() {
+    allowUp = true;
+}
+
+void Vehicle::AllowDown() {
+    allowDown = true;
+}
+

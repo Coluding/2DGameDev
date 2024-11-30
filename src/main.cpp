@@ -36,7 +36,7 @@ ObstacleFactory initializeFactory(ObstacleContainer* container, FallingObstacleC
 int main() {
     // Create a window
     sf::RenderWindow window(sf::VideoMode(800, 600), "Obstacle Container Example");
-    window.setFramerateLimit(50);
+    window.setFramerateLimit(200);
 
     sf::Clock clock;
 
@@ -92,12 +92,12 @@ int main() {
                     std::cout << vehicle.getPosition().x << " " << vehicle.getPosition().y;
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
                     //vehicle.move(10, -40);
-                    vehicle.jump(350, 350);
+                    vehicle.jump(200, 350);
                 }
             }
         }
 
-        vehicle.update(deltaTime);
+        vehicle.update();
         totalTimeElapsed += deltaTime;
 
         // Update the camera to follow the player

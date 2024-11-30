@@ -5,7 +5,7 @@
 #include <vector>
 
 class Vehicle {
-private:
+public:
     sf::ConvexShape verticalBody;
     sf::ConvexShape horizontalBody;
     sf::CircleShape leftWheel, rightWheel;
@@ -18,6 +18,7 @@ private:
     float wheelRotationSpeed;
     float gamePosition;
     float widthVertical;
+    float widthHorizontal;
     float screenHeight;
     bool allowDown;
     bool allowUp;
@@ -26,6 +27,8 @@ private:
     float gravity;
     float verticalSpeed;
     bool isOnGround;
+    float jumpStepSize;
+    float jumpProgress;
 
     sf::VertexArray leftWheelIntersectionLine;
 
@@ -33,7 +36,7 @@ public:
     Vehicle(float x, float y, float widthVertical, float widthHoriztonal, float heightVertical, float heightHorizontal,
         float screenHeight);
 
-    void update(float deltaTime);
+    void update();
 
     void draw(sf::RenderWindow& window);
 
@@ -56,6 +59,15 @@ public:
 
     void setOnGround(bool onGround);
 
+    void ForbidRight();
+    void ForbidLeft();
+    void ForbidUp();
+    void ForbidDown();
+
+    void AllowRight();
+    void AllowLeft();
+    void AllowUp();
+    void AllowDown();
 };
 
 #endif // VEHICLE_H
