@@ -27,8 +27,10 @@ public:
     float gravity;
     float verticalSpeed;
     bool isOnGround;
-    float jumpStepSize;
+    float jumpStepSize = 0.025f;
     float jumpProgress;
+    float momentum;
+    short jumpCount;
 
     sf::VertexArray leftWheelIntersectionLine;
 
@@ -68,6 +70,8 @@ public:
     void AllowLeft();
     void AllowUp();
     void AllowDown();
+
+    void updateMomentum();
 };
 
 #endif // VEHICLE_H

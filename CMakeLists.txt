@@ -18,7 +18,10 @@ add_executable(2DGameDev ${SOURCES}
         src/player/character.h
         src/player/character.cpp
         src/player/camera.h
-        src/player/camera.cpp)
+        src/player/camera.cpp
+        src/game/Game.cpp
+        src/game/Game.h
+)
 
 # Link SFML libraries
 target_link_libraries(2DGameDev
@@ -27,4 +30,8 @@ target_link_libraries(2DGameDev
         sfml-system
 )
 
+# Copy resources to the build directory
+file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 
+# Optional: Install the assets folder
+install(DIRECTORY assets/ DESTINATION assets)

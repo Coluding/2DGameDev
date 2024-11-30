@@ -19,6 +19,7 @@ public:
     virtual const sf::Vector2f getPosition() const = 0;
     virtual void setColor(sf::Color) = 0;
     virtual bool checkCollision(Vehicle& vehicle)  = 0;
+    virtual sf::Vector2f getSize() const = 0;
 };
 
 class Wall : public Obstacle{
@@ -35,6 +36,7 @@ public:
     void setColor(sf::Color) override;
     bool checkCollision(Vehicle& vehicle) override;
     ~Wall() override = default;
+    sf::Vector2f getSize() const override;
 
 };
 
@@ -56,6 +58,7 @@ public:
     bool checkCollision(Vehicle& vehicle)  override;
     const void draw(sf::RenderWindow &window) const override;
     ~SpikeWall() override = default;
+    sf::Vector2f getSize() const override;
 };
 
 class FallingObstacle: public Obstacle {
@@ -64,6 +67,8 @@ private:
     float fallingSpeed;
     bool inScreen;
     float activationDistance;
+    float baseWidth;
+    float baseHeight;
 
 
 public:
@@ -81,6 +86,7 @@ public:
     bool isInScreen() const;
     void setInScreen(bool val);
     void fall();
+    sf::Vector2f getSize() const override;
 };
 
 

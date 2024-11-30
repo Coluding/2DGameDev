@@ -10,8 +10,52 @@
 
 #include "obstacles.h"
 
+void checkRightAndLeftEdgeCollision(Vehicle& vehicle, Obstacle& wall,float& wheelX, float& wheelY, float& verticalBodyX, float& verticalBodyY,
+        float& horizontalBodyX, float& horizontalBodyY);
+
+void checkRightAndLeftEdgeCollision(Vehicle& vehicle, Obstacle& wall,
+    float& wheelX, float& wheelY, float& verticalBodyX, float& verticalBodyY,
+        float& horizontalBodyX, float& horizontalBodyY) {
+
+        vehicle.getFullPosition(wheelX, wheelY, verticalBodyX, verticalBodyY, horizontalBodyX, horizontalBodyY);
 
 
+    float wheelBottomY = wheelY + vehicle.getWheelRadius();
+    float wallTopY = wall.getPosition().y;
+    float wallLeftX = wall.getPosition().x;
+    float wallRightX = wallLeftX + wall.getSize().x;
+
+    bool hitWallLeft = horizontalBodyX + (vehicle.widthHorizontal / 2) > wallLeftX - 10 && horizontalBodyX < wallLeftX + 10;
+    bool hitWallRight = horizontalBodyX - (vehicle.widthHorizontal / 2) < wallRightX + 10 && horizontalBodyX > wallRightX - 10;
+
+    if (hitWallLeft && wheelBottomY > wallTopY + 20) {
+        vehicle.ForbidRight();
+    } else {
+        vehicle.AllowRight();
+    }
+
+    if (hitWallRight && wheelBottomY > wallTopY + 20) {
+        vehicle.ForbidLeft();
+    } else {
+        vehicle.AllowLeft();
+    }
+}
+
+
+bool checkWithinXBounds(Vehicle& vehicle, float wheelX, float wallLeftX, float wallRightX) {
+
+    bool withinXBounds = (wheelX + vehicle.getWheelRadius() > wallLeftX &&
+                     wheelX - vehicle.getWheelRadius() < wallRightX);
+
+    return withinXBounds;
+}
+
+bool checkWithinYBounds(float wheelBottomY, float wallTopY, float wheelY, float wallBottomY) {
+
+   bool withinYBounds = (wheelBottomY >= wallTopY && wheelY < wallBottomY);
+
+   return withinYBounds;
+}
 
 
 Wall::Wall(float height, float width, float x, float y, sf::Color color) {
@@ -43,6 +87,9 @@ const void Wall::draw(sf::RenderWindow &window) const {
     window.draw(wall);
 }
 
+sf::Vector2f Wall::getSize() const {
+    return wall.getSize();
+}
 
 void Wall::setColor(sf::Color color){
     wall.setFillColor(color);
@@ -52,7 +99,7 @@ bool Wall::checkCollision(Vehicle& vehicle) {
     float wheelX = 0.0f, wheelY = 0.0f, verticalBodyX = 0.0f, verticalBodyY = 0.0f,
           horizontalBodyX = 0.0f, horizontalBodyY = 0.0f;
 
-    vehicle.getFullPosition(wheelX, wheelY, verticalBodyX, verticalBodyY, horizontalBodyX, horizontalBodyY);
+    checkRightAndLeftEdgeCollision(vehicle, *this, wheelX, wheelY, verticalBodyX, verticalBodyY, horizontalBodyX, horizontalBodyY);
 
     float wheelBottomY = wheelY + vehicle.getWheelRadius();
     float wallTopY = getPosition().y;
@@ -60,24 +107,8 @@ bool Wall::checkCollision(Vehicle& vehicle) {
     float wallLeftX = getPosition().x;
     float wallRightX = wallLeftX + wall.getSize().x;
 
-    bool withinXBounds = (wheelX + vehicle.getWheelRadius() > wallLeftX &&
-                          wheelX - vehicle.getWheelRadius() < wallRightX);
-    bool withinYBounds = (wheelBottomY >= wallTopY && wheelY < wallBottomY);
-
-    bool hitWallLeft = horizontalBodyX + (vehicle.widthHorizontal / 2) > wallLeftX - 10 && horizontalBodyX < wallLeftX + 10;
-    bool hitWallRight = horizontalBodyX - (vehicle.widthHorizontal / 2) < wallRightX + 10 && horizontalBodyX > wallRightX - 10;
-
-    if (hitWallLeft && wheelBottomY > wallTopY + 20) {
-        vehicle.ForbidRight();
-    } else {
-        vehicle.AllowRight();
-    }
-
-    if (hitWallRight && wheelBottomY > wallTopY + 20) {
-        vehicle.ForbidLeft();
-    } else {
-        vehicle.AllowLeft();
-    }
+    bool withinXBounds = checkWithinXBounds(vehicle, wheelX, wallLeftX, wallRightX);
+    bool withinYBounds = checkWithinYBounds(wheelBottomY, wallTopY, wheelY, wallBottomY);
 
     if (withinXBounds && withinYBounds) {
         vehicle.setOnGround(true);
@@ -138,7 +169,9 @@ const void SpikeWall::draw(sf::RenderWindow &window) const {
     }
 }
 
-
+sf::Vector2f SpikeWall::getSize() const {
+    return base.getSize();
+}
 
 void SpikeWall::setPosition(float x, float y) {
     // Update base position
@@ -176,12 +209,33 @@ const sf::Vector2f SpikeWall::getPosition() const {
 }
 
 bool SpikeWall::checkCollision(Vehicle& vehicle) {
+    float wheelX = 0.0f, wheelY = 0.0f, verticalBodyX = 0.0f, verticalBodyY = 0.0f,
+          horizontalBodyX = 0.0f, horizontalBodyY = 0.0f;
+
+    checkRightAndLeftEdgeCollision(vehicle, *this, wheelX, wheelY, verticalBodyX, verticalBodyY, horizontalBodyX, horizontalBodyY);
+
+    float wheelBottomY = wheelY + vehicle.getWheelRadius();
+    float wallTopY = getPosition().y;
+    float wallBottomY = wallTopY + base.getSize().y;
+    float wallLeftX = getPosition().x;
+    float wallRightX = wallLeftX + base.getSize().x;
+
+    bool withinXBounds = checkWithinXBounds(vehicle, wheelX, wallLeftX, wallRightX);
+    bool withinYBounds = checkWithinYBounds(wheelBottomY, wallTopY, wheelY, wallBottomY);
+
+    if (withinXBounds && withinYBounds) {
+        return true;
+    }
+
     return false;
+
+
 }
 
 
 FallingObstacle::FallingObstacle(float baseWidth, float baseHeight, float fallingSpeed, float x, float activationDistance)
-    : fallingSpeed(fallingSpeed), inScreen(false), activationDistance(activationDistance) {
+    : fallingSpeed(fallingSpeed), inScreen(false), activationDistance(activationDistance), baseWidth(baseWidth),
+      baseHeight(baseHeight) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> spikesDis(5, 8); // Number of spikes on the star (odd is recommended)
@@ -265,6 +319,10 @@ void FallingObstacle::fall() {
     }
 }
 
+sf::Vector2f FallingObstacle::getSize() const {
+    return sf::Vector2f(baseWidth, baseHeight);
+}
+
 void ObstacleContainer::addObstacle(std::unique_ptr<Obstacle> obs){
     obstacles.push_back(std::move(obs));
 }
@@ -328,6 +386,8 @@ void FallingObstacleContainer::drawAll(sf::RenderWindow &window) const {
 }
 
 
+
+
 ObstacleFactory::ObstacleFactory(int numWalls, int numSpikeWalls, int numFallingObjects, float widthScreen,
                                  float heightScreen, float gameTime,
                                  ObstacleContainer* container, FallingObstacleContainer* fallingContainer)
@@ -345,11 +405,9 @@ void ObstacleFactory::createWalls() {
     int maxWalls = 30; //hard code
     int gapAccumulator = 0;
     srand( (unsigned)time( NULL ) );
-
- std::cout << RAND_MAX << "\n";
     for (int i = 0; i < maxWalls; i++){
     float r = (float) rand()/RAND_MAX;
-    std::cout << r << "\n";
+
     if (r < 0.5){
 
         container->addObstacle(std::move(createRandomWall(i, 150, 200, gapAccumulator)));

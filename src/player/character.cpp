@@ -4,7 +4,7 @@
 // Constructor
 Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, float heightVertical, float heightHorizontal, float screenHeight)
     : wheelRotationSpeed(100.0f), widthVertical(widthVertical),  widthHorizontal(widthHorizontal), allowDown(true), allowLeft(true), allowRight(true),
-    allowUp(true), gravity(160), verticalSpeed(0.0f), isOnGround(true){
+    allowUp(true), gravity(275), verticalSpeed(0.0f), isOnGround(true){
     verticalBody.setPointCount(6);
     verticalBody.setPoint(0, sf::Vector2f(x - widthVertical / 2, y - heightVertical));
     verticalBody.setPoint(1, sf::Vector2f(x + widthVertical / 2, y - heightVertical));
@@ -23,7 +23,7 @@ Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, f
     horizontalBody.setFillColor(sf::Color(208, 208, 225));
 
     leftWheel.setRadius(heightHorizontal / 2);
-    leftWheel.setFillColor(sf::Color::Black);
+    rightWheel.setFillColor(sf::Color(245, 233, 233));
     leftWheel.setOrigin(leftWheel.getRadius(), leftWheel.getRadius()); // Center the wheel
     leftWheel.setPosition(x - widthHorizontal / 4, y + heightHorizontal + leftWheel.getRadius());
     leftWheelIntersectionLine = sf::VertexArray(sf::Lines, 2);
@@ -31,62 +31,73 @@ Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, f
 
     // Initialize right wheel
     rightWheel.setRadius(heightHorizontal / 2);
-    rightWheel.setFillColor(sf::Color::Black);
+    rightWheel.setFillColor(sf::Color(245, 233, 233));
     rightWheel.setOrigin(rightWheel.getRadius(), rightWheel.getRadius());
     rightWheel.setPosition(x + widthHorizontal / 4, y + heightHorizontal + rightWheel.getRadius());
 
-    screenHeight = screenHeight - heightVertical;
+    this->screenHeight = screenHeight - heightVertical;
 }
 
 void Vehicle::update() {
+    updateMomentum();
     if (!isOnGround) {
         if (isJumping) {
             // Increment jump progress
-            jumpProgress += jumpStepSize;
+             jumpProgress += jumpStepSize;
 
-            float t = jumpProgress;
-            float newX = jumpStartPos.x + t * jumpDx;
-            float newY = jumpStartPos.y - jumpHeight * (1 - (2 * t - 1) * (2 * t - 1));
+            float newX = jumpStartPos.x + jumpProgress * jumpDx;
+            float newY = jumpStartPos.y - jumpHeight * (1 - (2 * jumpProgress - 1) * (2 * jumpProgress - 1));
 
             // Determine movement delta
-            float dx = newX - getPosition().x;
-            float dy = newY - getPosition().y;
+             float dx = newX - getPosition().x;
+             float dy = newY - getPosition().y;
 
-            // Use move to adjust position
             move(dx, dy);
 
-            if (t >= 1.0f) {
+            if (jumpProgress >= 0.5f) {
                 isJumping = false;
+                momentum = dx;
 
-                // Ensure final position is accurate
-                float finalDx = (jumpStartPos.x + jumpDx) - getPosition().x;
-                float finalDy = jumpStartPos.y - getPosition().y;
-                move(finalDx, finalDy);
             }
-        } else {
-            // Apply gravity if not on the ground or jumping
-            move(0, gravity * jumpStepSize);
+        }
+
+        else {
+            move(momentum, gravity * jumpStepSize);
             float rotation = wheelRotationSpeed * jumpStepSize;
             leftWheel.rotate(rotation);
             rightWheel.rotate(rotation);
         }
+
     }
 }
+
+void Vehicle::updateMomentum() {
+     if (getPosition().y >= 0 || isOnGround) {
+        momentum = 0;
+    }
+
+}
+
 
 // Initiate the jump
 void Vehicle::jump(float dx, float height) {
 
     //if (!isOnGround) return; // Prevent jumping if not on the ground
 
+    if (jumpCount > 1) {
+        jumpCount = 0;
+        return;
+    }
+
     if (isJumping) return; // Prevent starting a new jump if already jumping
 
     isJumping = true;
     jumpProgress = 0.0f; // Reset progress
-    jumpStepSize = 0.025f; // Fixed step size per update (example value)
     jumpStartPos = getPosition();
     jumpDx = dx;
     jumpHeight = height;
     isOnGround = false;
+    jumpCount++;
 }
 // Method to set the on-ground state
 void Vehicle::setOnGround(bool onGround) {
@@ -120,7 +131,7 @@ void Vehicle::setPosition(float x, float y) {
 
 void Vehicle::move(float dx, float dy) {
 
-    if (getPosition().y + dy > screenHeight) {
+    if (getPosition().y - 7 + dy > 0) {
         dy = 0;
     };
 
