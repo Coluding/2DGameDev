@@ -45,7 +45,7 @@ void checkRightAndLeftEdgeCollision(Vehicle& vehicle, Obstacle& wall,
 bool checkWithinXBounds(Vehicle& vehicle, float wheelX, float wallLeftX, float wallRightX) {
 
     bool withinXBounds = (wheelX + vehicle.getWheelRadius() > wallLeftX &&
-                     wheelX - vehicle.getWheelRadius() < wallRightX);
+                          wheelX - vehicle.getWheelRadius() < wallRightX);
 
     return withinXBounds;
 }
@@ -335,7 +335,7 @@ bool FallingObstacle::checkCollision(Vehicle& vehicle) {
     std::pair<double, double> obstacleXInterval = std::pair<double, double> {base.getPosition().x, base.getPosition().x + baseWidth};
 
     bool xOverlap = doIntervalsOverlap(vehicleXInterval, obstacleXInterval);
-    bool yOverlap = wheelY - vehicle.heightVertical * 3 < base.getPosition().y;
+    bool yOverlap = wheelY - vehicle.heightVertical * 3 < base.getPosition().y && wheelY > base.getPosition().y;
 
     if (xOverlap && yOverlap) {
         return true;

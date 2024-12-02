@@ -128,7 +128,7 @@ ObstacleFactory Game::initializeFactory(ObstacleContainer* container, FallingObs
     // Number of obstacles per screen
     const int numWalls = 10;
     const int numSpikeWalls = 10;
-    const int numFallingObjects = 25;
+    const int numFallingObjects = 1;
 
     return ObstacleFactory(
         numWalls, numSpikeWalls, numFallingObjects,
