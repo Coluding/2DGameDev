@@ -24,8 +24,10 @@ public:
 
 class Wall : public Obstacle{
 private:
-    sf::RectangleShape wall;
     sf::Color color;
+    sf::RectangleShape wall;   // Main wall
+    sf::RectangleShape shadow; // Shadow for 3D effect
+    sf::RectangleShape border;
 public:
     Wall(float height, float width, float x, float y, sf::Color color);
     Wall(float height, float width, float x, float y);
@@ -115,14 +117,15 @@ public:
     void activate(float xPosition) const;
     void drawAll(sf::RenderWindow& window) const;
     void clear();
+    bool checkCollision(Vehicle& vehicle);
 };
 
 
 class ObstacleFactory {
 private:
-    int numWallsPerScreen;
-    int numSpikeWallsPerScreen;
-    int numFallingObjectsPerScreen;
+    int numWalls;
+    int numSpikeWalls;
+    int numFallingObjects;
     float widthScreen;
     float heightScreen;
     float gameTime;

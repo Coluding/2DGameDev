@@ -3,7 +3,8 @@
 #include <cmath>
 // Constructor
 Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, float heightVertical, float heightHorizontal, float screenHeight)
-    : wheelRotationSpeed(100.0f), widthVertical(widthVertical),  widthHorizontal(widthHorizontal), allowDown(true), allowLeft(true), allowRight(true),
+    : wheelRotationSpeed(100.0f), widthVertical(widthVertical),  heightVertical(heightVertical),
+     widthHorizontal(widthHorizontal), allowDown(true), allowLeft(true), allowRight(true),
     allowUp(true), gravity(275), verticalSpeed(0.0f), isOnGround(true){
     verticalBody.setPointCount(6);
     verticalBody.setPoint(0, sf::Vector2f(x - widthVertical / 2, y - heightVertical));
@@ -23,7 +24,8 @@ Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, f
     horizontalBody.setFillColor(sf::Color(208, 208, 225));
 
     leftWheel.setRadius(heightHorizontal / 2);
-    rightWheel.setFillColor(sf::Color(245, 233, 233));
+    //rightWheel.setFillColor(sf::Color(245, 233, 233));
+    leftWheel.setFillColor(sf::Color::Black);
     leftWheel.setOrigin(leftWheel.getRadius(), leftWheel.getRadius()); // Center the wheel
     leftWheel.setPosition(x - widthHorizontal / 4, y + heightHorizontal + leftWheel.getRadius());
     leftWheelIntersectionLine = sf::VertexArray(sf::Lines, 2);
@@ -31,7 +33,8 @@ Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, f
 
     // Initialize right wheel
     rightWheel.setRadius(heightHorizontal / 2);
-    rightWheel.setFillColor(sf::Color(245, 233, 233));
+    //rightWheel.setFillColor(sf::Color(245, 233, 233));
+    rightWheel.setFillColor(sf::Color::Black);
     rightWheel.setOrigin(rightWheel.getRadius(), rightWheel.getRadius());
     rightWheel.setPosition(x + widthHorizontal / 4, y + heightHorizontal + rightWheel.getRadius());
 
@@ -53,6 +56,7 @@ void Vehicle::update() {
              float dy = newY - getPosition().y;
 
             move(dx, dy);
+            //move(dx, 100);
 
             if (jumpProgress >= 0.5f) {
                 isJumping = false;
@@ -184,10 +188,6 @@ void Vehicle::getFullPosition(float &wheelX, float &wheelY, float &verticalBodyX
     verticalBodyY = verticalBody.getPosition().y;
     horizontalBodyX = horizontalBody.getPosition().x;
     horizontalBodyY = horizontalBody.getPosition().y;
-
-
-
-
 }
 
 float Vehicle::getWheelRadius() const {

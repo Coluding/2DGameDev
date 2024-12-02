@@ -8,7 +8,7 @@ Game::Game()
         factory(initializeFactory(&container, &fallingContainer)){
     window.setFramerateLimit(80);
 
-    if (!backgroundTexture.loadFromFile("assets/bg.png")) {
+    if (!backgroundTexture.loadFromFile("assets/bgg.png")) {
         std::cerr << "Error loading background texture!" << std::endl;
     }
 
@@ -64,7 +64,7 @@ void Game::handleInput() {
     } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
         vehicle.move(20, 0);
     } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-        vehicle.move(-10, 0);
+        vehicle.move(-20, 0);
         std::cout << vehicle.getPosition().x << " " << vehicle.getPosition().y << std::endl;
     } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
         vehicle.jump(150, 350);
@@ -77,7 +77,7 @@ void Game::update(float deltaTime) {
     fallingContainer.activate(vehicle.getPosition().x);
     fallingContainer.fallAll();
 
-    if (container.checkCollision(vehicle)) {
+    if (container.checkCollision(vehicle ) || fallingContainer.checkCollision(vehicle)) {
         std::cout << "Collision detected! Game Over!" << std::endl;
         gameState = GameState::GAME_OVER;
     }
@@ -126,9 +126,9 @@ ObstacleFactory Game::initializeFactory(ObstacleContainer* container, FallingObs
     const float gameTime = 0.0f; // Start game time at 0
 
     // Number of obstacles per screen
-    const int numWalls = 5;
-    const int numSpikeWalls = 3;
-    const int numFallingObjects = 4;
+    const int numWalls = 10;
+    const int numSpikeWalls = 10;
+    const int numFallingObjects = 25;
 
     return ObstacleFactory(
         numWalls, numSpikeWalls, numFallingObjects,

@@ -57,24 +57,56 @@ bool checkWithinYBounds(float wheelBottomY, float wallTopY, float wheelY, float 
    return withinYBounds;
 }
 
+bool doIntervalsOverlap(const std::pair<double, double>& interval1, const std::pair<double, double>& interval2) {
+    return interval1.second >= interval2.first && interval1.first <= interval2.second;
+}
+
 
 Wall::Wall(float height, float width, float x, float y, sf::Color color) {
-        wall.setSize(sf::Vector2f(width, height)); // Set size (width, height)
-        wall.setPosition(x, y);                   // Set initial position
-        wall.setFillColor(color);
+    shadow.setSize(sf::Vector2f(width, height));
+    shadow.setPosition(x + 5, y + 5); // Offset for shadow
+    shadow.setFillColor(sf::Color(50, 50, 50, 150)); // Semi-transparent shadow
+
+    // Initialize border
+    border.setSize(sf::Vector2f(width, height));
+    border.setPosition(x, y);
+    border.setFillColor(color);
+    border.setOutlineThickness(2.0f);
+    border.setOutlineColor(sf::Color(100, 100, 150));
+
+    // Initialize main wall
+    wall.setSize(sf::Vector2f(width, height));
+    wall.setPosition(x, y);
+    wall.setFillColor(color);
     }
 
 Wall::Wall(float height, float width, float x, float y) {
-    wall.setSize(sf::Vector2f(width, height)); // Set size (width, height)
-    wall.setPosition(x, y);                   // Set initial position
-    wall.setFillColor(color=sf::Color(135, 135, 171));
+    shadow.setSize(sf::Vector2f(width, height));
+    shadow.setPosition(x + 5, y + 5); // Offset for shadow
+    shadow.setFillColor(sf::Color(50, 50, 50, 150)); // Semi-transparent shadow
+
+    // Initialize border
+    border.setSize(sf::Vector2f(width, height));
+    border.setPosition(x, y);
+    border.setFillColor(color);
+    border.setOutlineThickness(2.0f);
+    border.setOutlineColor(sf::Color(100, 100, 150));
+
+    // Initialize main wall
+    wall.setSize(sf::Vector2f(width, height));
+    wall.setPosition(x, y);
+    wall.setFillColor(sf::Color(230, 247, 255));
 }
 
 void Wall::setPosition(float x, float y) {
+    shadow.setPosition(x + 5, y + 5); // Adjust shadow position
+    border.setPosition(x, y);        // Adjust border position
     wall.setPosition(x, y);
 }
 
 void Wall::setDeltaPosition(float dx, float dy) {
+    shadow.move(dx, dy);
+    border.move(dx, dy);
     wall.move(dx, dy);
 }
 
@@ -84,7 +116,9 @@ const sf::Vector2f Wall::getPosition() const {
 }
 
 const void Wall::draw(sf::RenderWindow &window) const {
-    window.draw(wall);
+    window.draw(shadow); // Draw shadow first
+    window.draw(border); // Draw border second
+    window.draw(wall);   // Draw main wall last
 }
 
 sf::Vector2f Wall::getSize() const {
@@ -291,7 +325,24 @@ void FallingObstacle::setDeltaPosition(float dx, float dy) {
 }
 
 bool FallingObstacle::checkCollision(Vehicle& vehicle) {
+
+    float wheelX = 0.0f, wheelY = 0.0f, verticalBodyX = 0.0f, verticalBodyY = 0.0f,
+          horizontalBodyX = 0.0f, horizontalBodyY = 0.0f;
+
+   vehicle.getFullPosition(wheelX, wheelY, verticalBodyX, verticalBodyY, horizontalBodyX, horizontalBodyY);
+
+    std::pair<double, double> vehicleXInterval = std::pair<double, double> {horizontalBodyX - vehicle.widthHorizontal / 2,verticalBodyX + vehicle.widthHorizontal / 2};
+    std::pair<double, double> obstacleXInterval = std::pair<double, double> {base.getPosition().x, base.getPosition().x + baseWidth};
+
+    bool xOverlap = doIntervalsOverlap(vehicleXInterval, obstacleXInterval);
+    bool yOverlap = wheelY - vehicle.heightVertical * 3 < base.getPosition().y;
+
+    if (xOverlap && yOverlap) {
+        return true;
+    }
+
     return false;
+
 }
 
 float FallingObstacle::getActivationDistance() const {
@@ -386,13 +437,22 @@ void FallingObstacleContainer::drawAll(sf::RenderWindow &window) const {
 }
 
 
+bool FallingObstacleContainer::checkCollision(Vehicle& vehicle) {
+    for (auto& obstacle: obstacles) {
+        if (vehicle.getPosition().x > obstacle->getPosition().x - 200) {
+            if (obstacle->checkCollision(vehicle)){
+                return true;
+            }
+        }
+    }
+}
 
 
 ObstacleFactory::ObstacleFactory(int numWalls, int numSpikeWalls, int numFallingObjects, float widthScreen,
                                  float heightScreen, float gameTime,
                                  ObstacleContainer* container, FallingObstacleContainer* fallingContainer)
-    : numWallsPerScreen(numWalls), numSpikeWallsPerScreen(numSpikeWalls),
-      widthScreen(widthScreen), numFallingObjectsPerScreen(numFallingObjects),
+    : numWalls(numWalls), numSpikeWalls(numSpikeWalls),
+      widthScreen(widthScreen), numFallingObjects(numFallingObjects),
       gameTime(gameTime), heightScreen(heightScreen),
       container(container), fallingContainer(fallingContainer) {
 
@@ -402,7 +462,8 @@ ObstacleFactory::ObstacleFactory(int numWalls, int numSpikeWalls, int numFalling
 
 
 void ObstacleFactory::createWalls() {
-    int maxWalls = 30; //hard code
+    int maxWalls = numWalls + numSpikeWalls;
+
     int gapAccumulator = 0;
     srand( (unsigned)time( NULL ) );
     for (int i = 0; i < maxWalls; i++){
@@ -419,7 +480,7 @@ void ObstacleFactory::createWalls() {
 }
 
 void ObstacleFactory::createFallingObjects() {
-    int maxObjects = 30; //hard code
+    int maxObjects = numFallingObjects;
     int gapAccumulator = 0;
 
     for (int i = 0; i < maxObjects; i++){

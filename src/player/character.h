@@ -18,6 +18,7 @@ public:
     float wheelRotationSpeed;
     float gamePosition;
     float widthVertical;
+    float heightVertical;
     float widthHorizontal;
     float screenHeight;
     bool allowDown;
