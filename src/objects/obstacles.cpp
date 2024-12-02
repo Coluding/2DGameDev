@@ -44,7 +44,7 @@ void checkRightAndLeftEdgeCollision(Vehicle& vehicle, Obstacle& wall,
 
 bool checkWithinXBounds(Vehicle& vehicle, float wheelX, float wallLeftX, float wallRightX) {
 
-    bool withinXBounds = (wheelX + vehicle.getWheelRadius() > wallLeftX &&
+    bool withinXBounds = (wheelX + vehicle.getWheelRadius() > wallLeftX - 10 &&
                           wheelX - vehicle.getWheelRadius() < wallRightX);
 
     return withinXBounds;
