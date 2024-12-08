@@ -44,14 +44,17 @@ public:
 
 class SpikeWall : public Obstacle {
 private:
-    sf::RectangleShape base;                 // Base platform
+    sf::RectangleShape base;
+    sf::RectangleShape shadow;
+    sf::RectangleShape border;
     std::vector<sf::ConvexShape> spikes;     // Spikes on top of the base
+    std::vector<sf::ConvexShape> spikeShadows; // Shadows for the spikes
+    std::vector<sf::ConvexShape> spikeBorders; // Borders for the spikes
     float spikeWidth;                        // Width of each spike
     float spikeHeight;                       // Height of each spike
 
 public:
     SpikeWall(float baseWidth, float baseHeight, float x, float y, float spikeWidth, float spikeHeight);
-    SpikeWall(float baseWidth, float baseHeight, float x, float y, float spikeWidth, float spikeHeight, sf::Color color);
 
     void setPosition(float x, float y) override;
     const sf::Vector2f getPosition() const override;
@@ -66,6 +69,7 @@ public:
 class FallingObstacle: public Obstacle {
 private:
     sf::ConvexShape base;
+    sf::ConvexShape shadow;
     float fallingSpeed;
     bool inScreen;
     float activationDistance;
@@ -74,7 +78,7 @@ private:
 
 
 public:
-    FallingObstacle(float baseWidth, float baseHeight, float fallingSpeed, float x, float activationDistance);
+    FallingObstacle(float baseWidth, float baseHeight, float fallingSpeed,float x, float activationDistance);
 
     void setPosition(float x, float y) override;
     const sf::Vector2f getPosition() const override;
@@ -88,6 +92,34 @@ public:
     bool isInScreen() const;
     void setInScreen(bool val);
     void fall();
+    sf::Vector2f getSize() const override;
+};
+
+class RollingObstacle: public Obstacle {
+private:
+    sf::CircleShape base;
+    sf::CircleShape shadow;
+    sf::CircleShape border;
+    float xPos;
+    float rollingSpeed;
+    bool inScreen;
+    float activationDistance;
+    float baseRadius;
+
+public:
+    RollingObstacle(float baseRadius, float rollingSpeed, float y, float x, float activationDistance);
+    void setPosition(float x, float y) override;
+    const sf::Vector2f getPosition() const override;
+    void setDeltaPosition(float dx, float dy) override;
+    void setColor(sf::Color color) override;
+    bool checkCollision(Vehicle& vehicle)  override;
+    const void draw(sf::RenderWindow &window) const override;
+    ~RollingObstacle() override = default;
+    float getActivationDistance() const ;
+    float getRollingSpeed() const;
+    bool isInScreen() const;
+    void setInScreen(bool val);
+    void roll();
     sf::Vector2f getSize() const override;
 };
 
@@ -120,29 +152,45 @@ public:
     bool checkCollision(Vehicle& vehicle);
 };
 
+class RollingObstacleContainer{
+private:
+    std::vector<std::unique_ptr<RollingObstacle>> obstacles;
+public:
+    void addObstacle(std::unique_ptr<RollingObstacle>);
+    void rollAll();
+    void activate(float xPosition) const;
+    void drawAll(sf::RenderWindow& window) const;
+    void clear();
+    bool checkCollision(Vehicle& vehicle);
+};
+
 
 class ObstacleFactory {
 private:
     int numWalls;
     int numSpikeWalls;
     int numFallingObjects;
+    int numRollingObjects;
     float widthScreen;
     float heightScreen;
     float gameTime;
     ObstacleContainer* container;
     FallingObstacleContainer* fallingContainer;
+    RollingObstacleContainer* rollingContainer;
 
 public:
     ObstacleFactory(int numWalls, int numSpikeWalls, int numFallingObjects, float widthScreen,
-                    float heightScreen, float gameTime,
-                    ObstacleContainer* container, FallingObstacleContainer* fallingContainer);
+                    int numRollingObjects, float heightScreen, float gameTime,
+                    ObstacleContainer* container, FallingObstacleContainer* fallingContainer,
+                    RollingObstacleContainer* rollingContainer);
     void createWalls();
     void createSpikeWalls();
     void createFallingObjects();
+    void createRollingObjects();
     std::unique_ptr<Wall>  createRandomWall(int x, int maxWidth, int maxHeight, int& gap) const;
     std::unique_ptr<SpikeWall> createRandomSpikeWall(int x, int maxWidth, int maxHeight, int& gap) const;
     std::unique_ptr<FallingObstacle> createRandomFallingObject(int x, int maxWidth, int maxHeight, int& gap) const;
-
+    std::unique_ptr<RollingObstacle> createRandomRollingObject(int x, int maxRadius, int minRadius, int& gap) const;
 };
 
 #endif //OBSTACLES_H

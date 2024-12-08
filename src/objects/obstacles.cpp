@@ -158,50 +158,62 @@ bool Wall::checkCollision(Vehicle& vehicle) {
 
 SpikeWall::SpikeWall(float baseWidth, float baseHeight, float x, float y, float spikeWidth, float spikeHeight)
     : spikeWidth(spikeWidth), spikeHeight(spikeHeight) {
-
-    // Initialize the base platform
-    base.setSize(sf::Vector2f(baseWidth, baseHeight));
-    base.setPosition(x, y);
-    base.setFillColor(sf::Color::Green);
-
-    int numSpikes = static_cast<int>(baseWidth / spikeWidth);
-    for (int i = 0; i < numSpikes; ++i) {
-        sf::ConvexShape spike(3); // Triangular spike
-        spike.setPoint(0, sf::Vector2f(x + i * spikeWidth, y));                         // Bottom-left
-        spike.setPoint(1, sf::Vector2f(x + (i + 0.5f) * spikeWidth, y - spikeHeight)); // Peak
-        spike.setPoint(2, sf::Vector2f(x + (i + 1) * spikeWidth, y));                  // Bottom-right
-        spike.setFillColor(sf::Color::Magenta); // Spikes are magenta
-        spikes.push_back(spike);
-    }
-}
-
-
-SpikeWall::SpikeWall(float baseWidth, float baseHeight, float x, float y, float spikeWidth, float spikeHeight,
-                     sf::Color color)
-    : spikeWidth(spikeWidth), spikeHeight(spikeHeight) {
+    sf::Color color = sf::Color(230, 247, 255);
     // Initialize the base platform
     base.setSize(sf::Vector2f(baseWidth, baseHeight + 100));
     base.setPosition(x, y);
     base.setFillColor(color);
+    shadow.setSize(sf::Vector2f(baseWidth, baseHeight + 100));
+    shadow.setPosition(x + 5, y + 105); // Offset for shadow
+    shadow.setFillColor(color);
+
+    border.setSize(sf::Vector2f(baseWidth, baseHeight + 100));
+    border.setPosition(x, y);
+    //border.setFillColor(color);
+    border.setOutlineThickness(2.0f);
+    border.setOutlineColor(sf::Color(100, 100, 150));
 
     // Create spikes on top of the base
     int numSpikes = static_cast<int>(baseWidth / spikeWidth);
     for (int i = 0; i < numSpikes; ++i) {
-        sf::ConvexShape spike(3); // Triangular spike
+        sf::ConvexShape spike(3);
         spike.setPoint(0, sf::Vector2f(x + i * spikeWidth, y));                         // Bottom-left
         spike.setPoint(1, sf::Vector2f(x + (i + 0.5f) * spikeWidth, y - spikeHeight)); // Peak
         spike.setPoint(2, sf::Vector2f(x + (i + 1) * spikeWidth, y));                  // Bottom-right
-        spike.setFillColor(sf::Color(225, 225, 234)); // Spikes are magenta
+        spike.setFillColor(sf::Color(225, 225, 234)); // Light color for spikes
         spikes.push_back(spike);
+
+        // Shadow for spike
+        sf::ConvexShape spikeShadow(3);
+        spikeShadow.setPoint(0, sf::Vector2f(x + i * spikeWidth + 3, y + 3));                         // Bottom-left (offset)
+        spikeShadow.setPoint(1, sf::Vector2f(x + (i + 0.5f) * spikeWidth + 3, y - spikeHeight + 3)); // Peak (offset)
+        spikeShadow.setPoint(2, sf::Vector2f(x + (i + 1) * spikeWidth + 3, y + 3));                  // Bottom-right (offset)
+        spikeShadow.setFillColor(sf::Color(100, 100, 100, 100)); // Darker and semi-transparent color for shadow
+        spikeShadows.push_back(spikeShadow);
+
+        //Border for spike
+        sf::ConvexShape spikeBorder(3);
+        spikeBorder.setPoint(0, sf::Vector2f(x + i * spikeWidth, y));                         // Bottom-left
+        spikeBorder.setPoint(1, sf::Vector2f(x + (i + 0.5f) * spikeWidth, y - spikeHeight)); // Peak
+        spikeBorder.setPoint(2, sf::Vector2f(x + (i + 1) * spikeWidth, y));                  // Bottom-right
+        spikeBorder.setOutlineThickness(2.0f);
+        spikeBorder.setOutlineColor(sf::Color(100, 100, 150));
+        spikeBorders.push_back(spikeBorder);
     }
 }
 
 const void SpikeWall::draw(sf::RenderWindow &window) const {
     window.draw(base);
-    for (auto &spike: spikes){
-        window.draw(spike);
+    window.draw(shadow);
+    window.draw(border);
+
+    for (size_t i = 0; i < spikes.size(); ++i) {
+        window.draw(spikes[i]);
+        window.draw(spikeShadows[i]);
+        window.draw(spikeBorders[i]);
     }
 }
+
 
 sf::Vector2f SpikeWall::getSize() const {
     return base.getSize();
@@ -210,6 +222,9 @@ sf::Vector2f SpikeWall::getSize() const {
 void SpikeWall::setPosition(float x, float y) {
     // Update base position
     base.setPosition(x, y);
+    shadow.setPosition(x + 5, y + 5); // Adjust shadow position
+    border.setPosition(x, y);        // Adjust border position
+
 
     // Update spike positions relative to the new base position
     for (size_t i = 0; i < spikes.size(); ++i) {
@@ -218,16 +233,28 @@ void SpikeWall::setPosition(float x, float y) {
         spikes[i].setPoint(0, sf::Vector2f(spikeX, spikeY));
         spikes[i].setPoint(1, sf::Vector2f(spikeX + 0.5f * spikeWidth, spikeY - spikeHeight));
         spikes[i].setPoint(2, sf::Vector2f(spikeX + spikeWidth, spikeY));
+
+        spikeShadows[i].setPoint(0, sf::Vector2f(spikeX + 3, spikeY + 3));
+        spikeShadows[i].setPoint(1, sf::Vector2f(spikeX + 0.5f * spikeWidth + 3, spikeY - spikeHeight + 3));
+        spikeShadows[i].setPoint(2, sf::Vector2f(spikeX + spikeWidth + 3, spikeY + 3));
+
+        spikeBorders[i].setPoint(0, sf::Vector2f(spikeX, spikeY));
+        spikeBorders[i].setPoint(1, sf::Vector2f(spikeX + 0.5f * spikeWidth, spikeY - spikeHeight));
+        spikeBorders[i].setPoint(2, sf::Vector2f(spikeX + spikeWidth, spikeY));
     }
 }
 
 void SpikeWall::setDeltaPosition(float dx, float dy) {
     // Move base
     base.move(dx, dy);
+    shadow.move(dx, dy);
+    border.move(dx, dy);
 
     // Move spikes
-    for (auto& spike : spikes) {
-        spike.move(dx, dy);
+    for (size_t i = 0; i < spikeShadows.size(); ++i){
+        spikes[i].move(dx, dy);
+        spikeShadows[i].move(dx, dy);
+        spikeBorders[i].move(dx, dy);
     }
 }
 
@@ -281,27 +308,44 @@ FallingObstacle::FallingObstacle(float baseWidth, float baseHeight, float fallin
     }
 
     base.setPointCount(numSpikes * 2); // Double for inner and outer points
+    shadow.setPointCount(numSpikes * 2);
 
     float radiusOuter = baseWidth / 2.0f;  // Outer radius
     float radiusInner = baseHeight / 2.5f; // Inner radius (smaller than outer)
     float centerX = baseWidth / 2.0f;      // Center x
     float centerY = baseHeight / 2.0f;     // Center y
 
-    // Generate star points
+    // Offset for the shadow
+    float shadowOffsetX = 5.0f;
+    float shadowOffsetY = 5.0f;
+
+    // Generate star points and shadow points
     for (int i = 0; i < numSpikes * 2; i++) {
         float angle = i * (360.0f / (numSpikes * 2)); // Divide full circle evenly
         float radians = angle * (3.14159f / 180.0f);  // Convert to radians
 
         float radius = (i % 2 == 0) ? radiusOuter : radiusInner; // Alternate radii
+
+        // Main star points
         float px = centerX + radius * cos(radians);
         float py = centerY + radius * sin(radians);
-
         base.setPoint(i, sf::Vector2f(px, py));
+
+        // Shadow points (offset)
+        float shadowPx = px + shadowOffsetX;
+        float shadowPy = py + shadowOffsetY;
+        shadow.setPoint(i, sf::Vector2f(shadowPx, shadowPy));
     }
 
     base.setPosition(x, -10000);
+    shadow.setPosition(x, -10000);
 
-    base.setFillColor(sf::Color(133, 173, 173));
+    base.setFillColor(sf::Color(230, 247, 255));
+    shadow.setFillColor(sf::Color(100, 100, 100, 100)); // Semi-transparent dark color for shadow
+
+    // Add a border outline to the base
+    base.setOutlineThickness(2.0f);
+    base.setOutlineColor(sf::Color(50, 80, 80));
 }
 
 const sf::Vector2f FallingObstacle::getPosition() const {
@@ -314,6 +358,7 @@ void FallingObstacle::setPosition(float x, float y) {
 
 const void FallingObstacle::draw(sf::RenderWindow &window) const {
     window.draw(base);
+    window.draw(shadow);
 }
 
 void FallingObstacle::setColor(sf::Color color) {
@@ -322,6 +367,7 @@ void FallingObstacle::setColor(sf::Color color) {
 
 void FallingObstacle::setDeltaPosition(float dx, float dy) {
     base.move(dx, dy);
+    shadow.move(dx, dy);
 }
 
 bool FallingObstacle::checkCollision(Vehicle& vehicle) {
@@ -370,6 +416,107 @@ void FallingObstacle::fall() {
     }
 }
 
+
+RollingObstacle::RollingObstacle(float baseRadius, float rollingSpeed, float y, float x, float activationDistance) {
+    base.setRadius(baseRadius);
+    shadow.setRadius(baseRadius);
+    border.setRadius(baseRadius);
+
+    base.setPosition(100000, 200);
+    shadow.setPosition(100000, y);
+    border.setPosition(100000, y);
+
+    base.setFillColor(sf::Color(230, 247, 255));
+    shadow.setFillColor(sf::Color(100, 100, 100, 100));
+    border.setFillColor(sf::Color::Transparent);
+    border.setOutlineThickness(2.0f);
+    border.setOutlineColor(sf::Color(50, 80, 80));
+
+    this -> rollingSpeed = rollingSpeed;
+    this -> activationDistance = activationDistance;
+    this -> baseRadius = baseRadius;
+    this -> inScreen = false;
+    this -> xPos = x;
+}
+
+
+void RollingObstacle::setPosition(float x, float y) {
+    base.setPosition(x, y);
+    shadow.setPosition(x + 5, y + 5); // Adjust shadow position
+    border.setPosition(x, y);        // Adjust border position
+}
+
+void RollingObstacle::setDeltaPosition(float dx, float dy) {
+    base.move(dx, dy);
+    shadow.move(dx, dy);
+    border.move(dx, dy);
+}
+
+const sf::Vector2f RollingObstacle::getPosition() const {
+    return sf::Vector2f(xPos, base.getPosition().y);
+}
+
+const void RollingObstacle::draw(sf::RenderWindow &window) const {
+    window.draw(base);
+    window.draw(shadow);
+    window.draw(border);
+}
+
+void RollingObstacle::setColor(sf::Color color) {
+    base.setFillColor(color);
+}
+
+void RollingObstacle::roll() {
+    if (inScreen) {
+        base.move(-rollingSpeed, 0);
+        shadow.move(-rollingSpeed, 0);
+         border.move(-rollingSpeed, 0);
+    }
+}
+
+float RollingObstacle::getActivationDistance() const {
+    return activationDistance;
+}
+
+float RollingObstacle::getRollingSpeed() const {
+    return rollingSpeed;
+}
+
+sf::Vector2f RollingObstacle::getSize() const {
+    return sf::Vector2f(baseRadius, baseRadius);
+}
+
+bool RollingObstacle::isInScreen() const {
+    return inScreen;
+}
+
+void RollingObstacle::setInScreen(bool val) {
+    if (!isInScreen()) {
+       base.setPosition(xPos, base.getPosition().y);
+         shadow.setPosition(xPos + 5, base.getPosition().y + 5);
+            border.setPosition(xPos, base.getPosition().y);
+    }
+    inScreen = val;
+}
+
+bool RollingObstacle::checkCollision(Vehicle &vehicle) {
+    float wheelX = 0.0f, wheelY = 0.0f, verticalBodyX = 0.0f, verticalBodyY = 0.0f,
+          horizontalBodyX = 0.0f, horizontalBodyY = 0.0f;
+
+    vehicle.getFullPosition(wheelX, wheelY, verticalBodyX, verticalBodyY, horizontalBodyX, horizontalBodyY);
+
+    std::pair<double, double> vehicleXInterval = std::pair<double, double> {horizontalBodyX - vehicle.widthHorizontal / 2,verticalBodyX + vehicle.widthHorizontal / 2};
+    std::pair<double, double> obstacleXInterval = std::pair<double, double> {base.getPosition().x - baseRadius, base.getPosition().x + baseRadius};
+
+    bool xOverlap = doIntervalsOverlap(vehicleXInterval, obstacleXInterval);
+    bool yOverlap = wheelY - vehicle.heightVertical * 3 < base.getPosition().y && wheelY > base.getPosition().y;
+
+    if (xOverlap && yOverlap) {
+        return true;
+    }
+}
+
+
 sf::Vector2f FallingObstacle::getSize() const {
     return sf::Vector2f(baseWidth, baseHeight);
 }
@@ -412,6 +559,7 @@ void FallingObstacleContainer::addObstacle(std::unique_ptr<FallingObstacle> obs)
 }
 
 
+
 void FallingObstacleContainer::activate(float xPosition) const {
     for (auto& obstacle : obstacles) { // Use a reference here
         if (abs(xPosition - obstacle->getPosition().x) <= obstacle->getActivationDistance()) {
@@ -447,17 +595,59 @@ bool FallingObstacleContainer::checkCollision(Vehicle& vehicle) {
     }
 }
 
+void RollingObstacleContainer::addObstacle(std::unique_ptr<RollingObstacle> obs) {
+    obstacles.push_back(std::move(obs));
+}
+
+void RollingObstacleContainer::activate(float xPosition) const {
+    for (auto& obstacle : obstacles) {
+        if (abs(xPosition - obstacle->getPosition().x) <= obstacle->getActivationDistance()) {
+            obstacle->setInScreen(true);
+        }
+    }
+}
+
+void RollingObstacleContainer::clear() {
+    obstacles.clear();
+}
+
+bool RollingObstacleContainer::checkCollision(Vehicle &vehicle) {
+    for (auto& obstacle: obstacles) {
+        if (vehicle.getPosition().x > obstacle->getPosition().x - 200) {
+            if (obstacle->checkCollision(vehicle)){
+                return true;
+            }
+        }
+    }
+}
+
+void RollingObstacleContainer::drawAll(sf::RenderWindow &window) const {
+    for (auto& obstacle : obstacles) {
+        obstacle->draw(window);
+    }
+}
+
+
+void RollingObstacleContainer::rollAll() {
+    for (auto& obstacle : obstacles) {
+        obstacle->roll();
+    }
+}
+
+
 
 ObstacleFactory::ObstacleFactory(int numWalls, int numSpikeWalls, int numFallingObjects, float widthScreen,
-                                 float heightScreen, float gameTime,
-                                 ObstacleContainer* container, FallingObstacleContainer* fallingContainer)
+                                 int numRollingObjects, float heightScreen, float gameTime,
+                                 ObstacleContainer* container, FallingObstacleContainer* fallingContainer,
+                                 RollingObstacleContainer* rollingContainer)
     : numWalls(numWalls), numSpikeWalls(numSpikeWalls),
-      widthScreen(widthScreen), numFallingObjects(numFallingObjects),
+      widthScreen(widthScreen), numFallingObjects(numFallingObjects), numRollingObjects(numRollingObjects),
       gameTime(gameTime), heightScreen(heightScreen),
-      container(container), fallingContainer(fallingContainer) {
+      container(container), fallingContainer(fallingContainer), rollingContainer(rollingContainer) {
 
       createWalls();
       createFallingObjects();
+      createRollingObjects();
 }
 
 
@@ -485,6 +675,15 @@ void ObstacleFactory::createFallingObjects() {
 
     for (int i = 0; i < maxObjects; i++){
         fallingContainer->addObstacle(std::move(createRandomFallingObject(i, 60, 60, gapAccumulator)));
+    }
+}
+
+void ObstacleFactory::createRollingObjects() {
+    int maxObjects = numRollingObjects;
+    int gapAccumulator = 0;
+
+    for (int i = 0; i < maxObjects; i++){
+        rollingContainer->addObstacle(std::move(createRandomRollingObject(i, 60, 60, gapAccumulator)));
     }
 }
 
@@ -520,7 +719,7 @@ std::unique_ptr<SpikeWall> ObstacleFactory::createRandomSpikeWall(int x, int max
     float width = disWidth(gen);
     float height = disHeight(gen);
     float spikeWidth = 10;
-    float spikeHeight = 40;
+    float spikeHeight = 20;
 
 
     float y = heightScreen - height;
@@ -530,8 +729,7 @@ std::unique_ptr<SpikeWall> ObstacleFactory::createRandomSpikeWall(int x, int max
     gap = x + width;
 
 
-    return std::make_unique<SpikeWall>(height, width, x, y, spikeWidth, spikeHeight,
-                                        sf::Color(135, 135, 171));
+    return std::make_unique<SpikeWall>(height, width, x, y, spikeWidth, spikeHeight);
 }
 
 std::unique_ptr<FallingObstacle> ObstacleFactory::createRandomFallingObject(int x, int maxWidth, int maxHeight,
@@ -555,6 +753,26 @@ int &gap) const {
 
     //TODO: remove hardcoded values
     return std::make_unique<FallingObstacle>(height, width, 2, xPos, 100);
+}
+
+std::unique_ptr<RollingObstacle> ObstacleFactory::createRandomRollingObject(int x, int maxRadius, int minRadius, int& gap) const {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> disRadius(minRadius, maxRadius);
+    std::uniform_int_distribution<> disOffset(200, 400);
+    std::uniform_int_distribution<> xPosOffset(5, 30);
+
+    int xPos = (x + xPosOffset(gen)) * 100;
+
+    float radius = disRadius(gen);
+
+    x += gap;
+    x += disOffset(gen);
+
+    gap = x + radius;
+
+    return std::make_unique<RollingObstacle>(radius, 2, heightScreen, xPos, 300);
+
 }
 
 

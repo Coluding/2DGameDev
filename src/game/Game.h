@@ -26,6 +26,7 @@ private:
     // Game objects
     ObstacleContainer container;
     FallingObstacleContainer fallingContainer;
+    RollingObstacleContainer rollingContainer;
     ObstacleFactory factory;
     Vehicle vehicle;
     Camera camera;
@@ -42,7 +43,8 @@ private:
     void update(float deltaTime);   // Updates game state
     void render();
     void restart();// Renders the game
-    ObstacleFactory initializeFactory(ObstacleContainer* container, FallingObstacleContainer* fallingContainer);
+    ObstacleFactory initializeFactory(ObstacleContainer* container, FallingObstacleContainer* fallingContainer,
+    RollingObstacleContainer* rollingContainer);
 };
 
 #endif // GAME_H

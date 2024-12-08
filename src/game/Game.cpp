@@ -2,10 +2,10 @@
 #include "../objects/obstacles.h"
 
 Game::Game()
-    : window(sf::VideoMode(800, 600), "2D Game Example"),
-      camera(800.0f, 600.0f, worldWidth, worldHeight),
+    : window(sf::VideoMode(1200, 800), "2D Game Example"),
+      camera(1000.0f, 600.0f, worldWidth, worldHeight),
       vehicle(0, 560, 30, 80, 30, 20, 600),
-        factory(initializeFactory(&container, &fallingContainer)){
+        factory(initializeFactory(&container, &fallingContainer, &rollingContainer)) {
     window.setFramerateLimit(80);
 
     if (!backgroundTexture.loadFromFile("assets/bgg.png")) {
@@ -19,7 +19,6 @@ Game::Game()
         static_cast<float>(windowSize.x) / textureSize.x,
         static_cast<float>(windowSize.y) / textureSize.y
     );
-
 }
 
 void Game::run() {
@@ -42,9 +41,9 @@ void Game::processEvents() {
             window.close();
         }
         if (event.type == sf::Event::KeyPressed) {
-            if (gameState == GameState::PLAYING) {
+            if (gameState == PLAYING) {
                 handleInput();
-            } else if (gameState == GameState::GAME_OVER) {
+            } else if (gameState == GAME_OVER) {
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
                     restart();
                 } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
@@ -75,7 +74,9 @@ void Game::update(float deltaTime) {
     vehicle.update();
     camera.update(vehicle.getPosition());
     fallingContainer.activate(vehicle.getPosition().x);
+    rollingContainer.activate(vehicle.getPosition().x);
     fallingContainer.fallAll();
+    rollingContainer.rollAll();
 
     if (container.checkCollision(vehicle ) || fallingContainer.checkCollision(vehicle)) {
         std::cout << "Collision detected! Game Over!" << std::endl;
@@ -120,7 +121,8 @@ void Game::render() {
 }
 
 
-ObstacleFactory Game::initializeFactory(ObstacleContainer* container, FallingObstacleContainer* fallingContainer) {
+ObstacleFactory Game::initializeFactory(ObstacleContainer* container, FallingObstacleContainer* fallingContainer,
+RollingObstacleContainer* rollingContainer) {
     const float screenWidth = 800.0f;
     const float screenHeight = 600.0f;
     const float gameTime = 0.0f; // Start game time at 0
@@ -129,11 +131,13 @@ ObstacleFactory Game::initializeFactory(ObstacleContainer* container, FallingObs
     const int numWalls = 10;
     const int numSpikeWalls = 10;
     const int numFallingObjects = 1;
+    const int numRollingObjects = 1;
 
     return ObstacleFactory(
-        numWalls, numSpikeWalls, numFallingObjects,
-        screenWidth, screenHeight, gameTime,
-        container, fallingContainer
+        numWalls, numSpikeWalls, numFallingObjects,screenWidth,
+        numRollingObjects,
+        screenHeight, gameTime,
+        container, fallingContainer, rollingContainer
     );
 }
 

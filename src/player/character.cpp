@@ -13,6 +13,8 @@ Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, f
     verticalBody.setPoint(3, sf::Vector2f(x + widthVertical / 2 - 10, y));
     verticalBody.setPoint(4, sf::Vector2f(x + widthVertical / 2, y));
     verticalBody.setPoint(5, sf::Vector2f(x - widthVertical / 2, y));
+    verticalBody.setOutlineColor(sf::Color::Black);
+    verticalBody.setOutlineThickness(1);
 
     verticalBody.setFillColor(sf::Color(194, 194, 214));
 
@@ -22,6 +24,8 @@ Vehicle::Vehicle(float x, float y, float widthVertical, float widthHorizontal, f
     horizontalBody.setPoint(2, sf::Vector2f(x + widthHorizontal / 2, y + heightHorizontal));
     horizontalBody.setPoint(3, sf::Vector2f(x - widthHorizontal / 2, y + heightHorizontal));
     horizontalBody.setFillColor(sf::Color(208, 208, 225));
+    horizontalBody.setOutlineColor(sf::Color::Black);
+    horizontalBody.setOutlineThickness(1);
 
     leftWheel.setRadius(heightHorizontal / 2);
     //rightWheel.setFillColor(sf::Color(245, 233, 233));
