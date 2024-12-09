@@ -102,7 +102,7 @@ void Vehicle::jump(float dx, float height) {
     isJumping = true;
     jumpProgress = 0.0f; // Reset progress
     jumpStartPos = getPosition();
-    jumpDx = dx;
+    jumpDx = moveDirection == LEFT ? -dx : dx;
     jumpHeight = height;
     isOnGround = false;
     jumpCount++;
@@ -113,14 +113,28 @@ void Vehicle::setOnGround(bool onGround) {
     //isJumping = false;
 }
 
-// Draw the vehicle
 void Vehicle::draw(sf::RenderWindow& window) {
-    window.draw(verticalBody);
-    window.draw(horizontalBody);
-    window.draw(leftWheel);
-    window.draw(rightWheel);
+    if (invincible) {
+        blinkCounter++;
 
+        if (blinkCounter >= blinkThreshold) {
+            visible = !visible;
+            blinkCounter = 0;
+        }
+    } else {
+        visible = true;
+        blinkCounter = 0;
+    }
+
+
+    if (visible) {
+        window.draw(verticalBody);
+        window.draw(horizontalBody);
+        window.draw(leftWheel);
+        window.draw(rightWheel);
+    }
 }
+
 
 void Vehicle::setPosition(float x, float y) {
     // Calculate the offset for each component relative to the new position
@@ -143,6 +157,12 @@ void Vehicle::move(float dx, float dy) {
         dy = 0;
     };
 
+    if (dx > 0){
+        moveDirection = RIGHT;
+    } else if (dx < 0) {
+        moveDirection = LEFT;
+    }
+
     if (dx > 0 && !allowRight) {
         dx = 0;
     } else if (dx < 0 && !allowLeft) {
@@ -152,6 +172,8 @@ void Vehicle::move(float dx, float dy) {
     } else if (dy < 0 && !allowUp) {
         dy = 0;
     }
+
+
 
     verticalBody.move(dx, dy);
     horizontalBody.move(dx, dy);
@@ -233,4 +255,28 @@ void Vehicle::AllowUp() {
 void Vehicle::AllowDown() {
     allowDown = true;
 }
+
+void Vehicle::updateMoveDirection(Direction direction) {
+    moveDirection = direction;
+}
+
+int Vehicle::getLife() {
+    return lives;
+}
+
+void Vehicle::setLife(int life) {
+    lives = life;
+}
+
+bool Vehicle::isInvincible() const {
+    return invincible;
+}
+
+void Vehicle::setInvincible(bool invincible) {
+    this->invincible = invincible;
+}
+
+
+
+
 

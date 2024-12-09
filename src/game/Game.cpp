@@ -12,6 +12,14 @@ Game::Game()
         std::cerr << "Error loading background texture!" << std::endl;
     }
 
+    heartTextures.resize(vehicle.getLife());
+    heartSprites.resize(vehicle.getLife());
+    for (int i = 0; i < vehicle.getLife(); ++i) {
+        heartTextures[i].loadFromFile("./assets/heart.png");
+        heartSprites[i].setTexture(heartTextures[i]);
+        heartSprites[i].setScale(0.05f, 0.05f);
+    }
+
     backgroundSprite.setTexture(backgroundTexture);
     sf::Vector2u textureSize = backgroundTexture.getSize();
     sf::Vector2u windowSize = window.getSize();
@@ -78,9 +86,17 @@ void Game::update(float deltaTime) {
     fallingContainer.fallAll();
     rollingContainer.rollAll();
 
+    if (vehicle.isInvincible()) {
+        invincbleTimer += deltaTime;
+        if (invincbleTimer > 2.0f) {
+            vehicle.setInvincible(false);
+        }
+    }
+
     if (container.checkCollision(vehicle ) || fallingContainer.checkCollision(vehicle)) {
-        std::cout << "Collision detected! Game Over!" << std::endl;
-        gameState = GameState::GAME_OVER;
+        if (!vehicle.isInvincible()) {
+            removeLife();
+        }
     }
 }
 
@@ -97,6 +113,11 @@ void Game::render() {
 
     // Draw the background
     window.draw(backgroundSprite);
+
+    for (int i = 0; i < vehicle.lives; ++i) {
+        heartSprites[i].setPosition(cameraCenter.x - cameraSize.x / 2 + 10 + i * 30, cameraCenter.y - cameraSize.y / 2 + 10);
+        window.draw(heartSprites[i]);
+    }
 
     // Draw other objects only if game is running
     if (gameState == GameState::PLAYING) {
@@ -118,6 +139,22 @@ void Game::render() {
     }
 
     window.display();
+}
+
+void Game::removeLife() {
+    vehicle.setInvincible(true);
+    invincbleTimer = 0.0f;
+    vehicle.setLife(vehicle.getLife() - 1);
+
+    if (vehicle.getLife() == 0) {
+        gameState = GameState::GAME_OVER;
+        return ;
+    }
+
+    heartTextures[vehicle.getLife() - 1].loadFromFile(".assets/heart_empty.png");
+    heartSprites[vehicle.getLife() - 1].setTexture(heartTextures[vehicle.getLife()]);
+    heartSprites[vehicle.getLife() - 1].setScale(0.05f, 0.05f);
+
 }
 
 

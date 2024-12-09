@@ -4,6 +4,14 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 
+enum Direction {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+    NONE
+};
+
 class Vehicle {
 public:
     sf::ConvexShape verticalBody;
@@ -32,6 +40,12 @@ public:
     float jumpProgress;
     float momentum;
     short jumpCount;
+    Direction moveDirection = NONE;
+    int lives = 3;
+    bool invincible = false;
+    bool visible = true;
+    int blinkCounter = 0;
+    int blinkThreshold = 10;
 
     sf::VertexArray leftWheelIntersectionLine;
 
@@ -73,6 +87,13 @@ public:
     void AllowDown();
 
     void updateMomentum();
+    void updateMoveDirection(Direction direction);
+    void setLife(int life);
+
+    int getLife();
+
+    bool isInvincible() const;
+    void setInvincible(bool val);
 };
 
 #endif // VEHICLE_H

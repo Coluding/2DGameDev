@@ -22,6 +22,9 @@ private:
     sf::RenderWindow window;
     sf::Texture backgroundTexture;
     sf::Sprite backgroundSprite;
+    std::vector<sf::Texture> heartTextures;
+    std::vector<sf::Sprite> heartSprites;
+
 
     // Game objects
     ObstacleContainer container;
@@ -31,6 +34,8 @@ private:
     Vehicle vehicle;
     Camera camera;
     GameState gameState = PLAYING;
+
+    float invincbleTimer = 0.0f;
 
 
     // Game world dimensions
@@ -43,6 +48,7 @@ private:
     void update(float deltaTime);   // Updates game state
     void render();
     void restart();// Renders the game
+    void removeLife();
     ObstacleFactory initializeFactory(ObstacleContainer* container, FallingObstacleContainer* fallingContainer,
     RollingObstacleContainer* rollingContainer);
 };
