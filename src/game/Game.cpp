@@ -108,10 +108,7 @@ void Game::render() {
 
     window.clear();
 
-    // Apply the camera view
     camera.applyTo(window);
-
-    // Draw the background
     window.draw(backgroundSprite);
 
     for (int i = 0; i < vehicle.lives; ++i) {
