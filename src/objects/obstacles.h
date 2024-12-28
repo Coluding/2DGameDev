@@ -42,6 +42,36 @@ public:
 
 };
 
+class MajorLeftObstacle{
+
+private:
+    sf::RectangleShape wall;
+    sf::RectangleShape shadow;
+    sf::RectangleShape border;
+    float movingSpeed = 0.0f;
+    float baseWidth;
+    float baseHeight;
+    std::vector<sf::ConvexShape> spikes;
+    std::vector<sf::ConvexShape> spikeShadows;
+    std::vector<sf::ConvexShape> spikeBorders;
+
+public:
+    MajorLeftObstacle(float baseWidth, float baseHeight, float x, float y, float movingSpeed, float spikeWidth, float spikeHeight);
+    void setPosition(float x, float y);
+    const sf::Vector2f getPosition() const;
+    void setDeltaPosition(float dx, float dy);
+    void setColor(sf::Color color);
+    bool checkCollision(Vehicle& vehicle);
+    const void draw(sf::RenderWindow &window) const;
+    ~MajorLeftObstacle() = default;
+    sf::Vector2f getSize() const;
+    void move();
+    void setMovingSpeed(float speed);
+
+};
+
+
+
 class SpikeWall : public Obstacle {
 private:
     sf::RectangleShape base;
@@ -65,6 +95,8 @@ public:
     ~SpikeWall() override = default;
     sf::Vector2f getSize() const override;
 };
+
+
 
 class FallingObstacle: public Obstacle {
 private:
@@ -138,6 +170,8 @@ public:
 
     bool checkCollision(Vehicle& vehicle);
 
+    void getLastObstacle(int &x, int& y) const;
+
 };
 
 class FallingObstacleContainer{
@@ -187,11 +221,18 @@ public:
     void createSpikeWalls();
     void createFallingObjects();
     void createRollingObjects();
+    void getLastObstacle(int& x, int& y ) const;
     std::unique_ptr<Wall>  createRandomWall(int x, int maxWidth, int maxHeight, int& gap) const;
     std::unique_ptr<SpikeWall> createRandomSpikeWall(int x, int maxWidth, int maxHeight, int& gap) const;
     std::unique_ptr<FallingObstacle> createRandomFallingObject(int x, int maxWidth, int maxHeight, int& gap) const;
     std::unique_ptr<RollingObstacle> createRandomRollingObject(int x, int maxRadius, int minRadius, int& gap) const;
+
 };
+
+
+
+
+
 
 #endif //OBSTACLES_H
 

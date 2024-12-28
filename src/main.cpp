@@ -6,7 +6,8 @@ using namespace  std;
 
 
 int main() {
-    Game game;
+    GameConfig config = GameConfig();
+    Game game(config);
     game.run();
     return 0;
 }

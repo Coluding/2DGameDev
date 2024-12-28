@@ -553,6 +553,13 @@ bool ObstacleContainer::checkCollision(Vehicle& vehicle) {
     return false;
 }
 
+void ObstacleContainer::getLastObstacle(int &x, int& y) const {
+    Obstacle& lastObstacle = *obstacles.back();
+    x = lastObstacle.getPosition().x;
+    y = lastObstacle.getPosition().y;
+
+}
+
 
 void FallingObstacleContainer::addObstacle(std::unique_ptr<FallingObstacle> obs) {
     obstacles.push_back(std::move(obs));
@@ -774,6 +781,131 @@ std::unique_ptr<RollingObstacle> ObstacleFactory::createRandomRollingObject(int 
     return std::make_unique<RollingObstacle>(radius, 2, heightScreen, xPos, 300);
 
 }
+
+void ObstacleFactory::getLastObstacle(int &x, int &y) const {
+    container->getLastObstacle(x, y);
+}
+
+MajorLeftObstacle::MajorLeftObstacle(float baseWidth, float baseHeight, float x, float y, float movingSpeed,
+float spikeWidth, float spikeHeight):
+ baseHeight(baseHeight),     baseWidth(baseWidth), movingSpeed(movingSpeed){
+
+    shadow.setSize(sf::Vector2f(baseWidth, baseHeight));
+    shadow.setPosition(x + 5, y + 5); // Offset for shadow
+    shadow.setFillColor(sf::Color(50, 50, 50, 150)); // Semi-transparent shadow
+
+    // Initialize border
+    border.setSize(sf::Vector2f(baseWidth, baseHeight));
+    border.setPosition(x, y);
+    border.setOutlineThickness(2.0f);
+    border.setOutlineColor(sf::Color(100, 100, 150));
+
+    // Initialize main wall
+    wall.setSize(sf::Vector2f(baseWidth, baseHeight));
+    wall.setPosition(x, y);
+    wall.setFillColor(sf::Color(230, 247, 255));
+
+
+    //create spikes on right side of wall
+    int numSpikes = baseHeight / 4;
+
+    for (int i = 0; i < numSpikes; i++){
+        sf::ConvexShape spike(3);
+
+        spike.setPoint(0, sf::Vector2f((x + baseWidth), y + i * spikeWidth));                         // Bottom-left
+        spike.setPoint(1, sf::Vector2f((x + baseWidth) + spikeHeight, y + (i + 0.5f) * spikeWidth)); // Peak
+        spike.setPoint(2, sf::Vector2f((x + baseWidth), y +  (i + 1) * spikeWidth));                  // Bottom-right
+        spike.setFillColor(sf::Color(225, 225, 234)); // Light color for spikes
+        spikes.push_back(spike);
+
+        // Shadow for spike
+        sf::ConvexShape spikeShadow(3);
+        spikeShadow.setPoint(0, sf::Vector2f((x + baseWidth) + 3, y + i * spikeWidth + 3));                         // Bottom-left (offset)
+        spikeShadow.setPoint(1, sf::Vector2f((x + baseWidth) + spikeHeight + 3, y + (i + 0.5f) * spikeWidth + 3)); // Peak (offset)
+        spikeShadow.setPoint(2, sf::Vector2f((x + baseWidth) + 3, y +  (i + 1) * spikeWidth + 3));                  // Bottom-right (offset)
+        spikeShadow.setFillColor(sf::Color(100, 100, 100, 100)); // Darker and semi-transparent color for shadow
+        spikeShadows.push_back(spikeShadow);
+
+        //Border for spike
+        sf::ConvexShape spikeBorder(3);
+        spikeBorder.setPoint(0, sf::Vector2f((x + baseWidth), y + i * spikeWidth));                         // Bottom-left
+        spikeBorder.setPoint(1, sf::Vector2f((x + baseWidth) + spikeHeight, y + (i + 0.5f) * spikeWidth)); // Peak
+        spikeBorder.setPoint(2, sf::Vector2f((x + baseWidth), y +  (i + 1) * spikeWidth));                  // Bottom-right
+        spikeBorder.setOutlineThickness(2.0f);
+        spikeBorder.setOutlineColor(sf::Color(100, 100, 150));
+        spikeBorders.push_back(spikeBorder);
+
+
+    }
+
+
+
+}
+
+
+const void MajorLeftObstacle::draw(sf::RenderWindow &window) const {
+    window.draw(wall);
+    window.draw(shadow);
+    window.draw(border);
+
+    for (size_t i = 0; i < spikes.size(); ++i) {
+        window.draw(spikes[i]);
+        window.draw(spikeShadows[i]);
+        window.draw(spikeBorders[i]);
+    }
+}
+
+const sf::Vector2f MajorLeftObstacle::getPosition() const {
+    return wall.getPosition();
+}
+
+sf::Vector2f MajorLeftObstacle::getSize() const {
+    return wall.getSize();
+}
+
+bool MajorLeftObstacle::checkCollision(Vehicle &vehicle) {
+
+    float wheelX = 0.0f, wheelY = 0.0f, verticalBodyX = 0.0f, verticalBodyY = 0.0f,
+          horizontalBodyX = 0.0f, horizontalBodyY = 0.0f;
+
+    vehicle.getFullPosition(wheelX, wheelY, verticalBodyX, verticalBodyY, horizontalBodyX, horizontalBodyY);
+
+    std::pair<double, double> vehicleXInterval = std::pair<double, double> {horizontalBodyX - vehicle.widthHorizontal / 2,verticalBodyX + vehicle.widthHorizontal / 2};
+    std::pair<double, double> obstacleXInterval = std::pair<double, double> {wall.getPosition().x, wall.getPosition().x + baseWidth};
+
+    return  doIntervalsOverlap(vehicleXInterval, obstacleXInterval);
+}
+
+void MajorLeftObstacle::setPosition(float x, float y) {
+}
+
+void MajorLeftObstacle::setColor(sf::Color color) {
+
+}
+
+void MajorLeftObstacle::move() {
+    setDeltaPosition(movingSpeed, 0);
+}
+
+void MajorLeftObstacle::setMovingSpeed(float speed) {
+    movingSpeed = speed;
+}
+
+
+void MajorLeftObstacle::setDeltaPosition(float dx, float dy) {
+    wall.move(dx, dy);
+    shadow.move(dx, dy);
+    border.move(dx, dy);
+
+    for (size_t i = 0; i < spikeShadows.size(); ++i){
+        spikes[i].move(dx, dy);
+        spikeShadows[i].move(dx, dy);
+        spikeBorders[i].move(dx, dy);
+    }
+}
+
+
+
 
 
 

@@ -1,16 +1,24 @@
+#include <format>
+#include <iostream>
+
 #include "Game.h"
 #include "../objects/obstacles.h"
 
-Game::Game()
-    : window(sf::VideoMode(1200, 800), "2D Game Example"),
-      camera(1000.0f, 600.0f, worldWidth, worldHeight),
+Game::Game(GameConfig config): screenHeight(config.screenHeight), screenWidth(config.screenWidth),
+      modeHeight(config.modeHeight), modeWidth(config.modeWidth), worldWidth(config.worldWidth),
+      worldHeight(config.worldHeight), window(sf::VideoMode(config.modeWidth, config.modeHeight), "2D Game"),
+      camera(config.screenWidth, config.screenHeight, config.worldWidth, config.worldHeight),
       vehicle(0, 560, 30, 80, 30, 20, 600),
-        factory(initializeFactory(&container, &fallingContainer, &rollingContainer)) {
-    window.setFramerateLimit(80);
+      factory(initializeFactory(&container, &fallingContainer, &rollingContainer, config)),
+      majorLeftObstacle(initMajorLeftObstacle()), winningPortal(initPortal(container, config)){
 
+    window.setFramerateLimit(80);
     if (!backgroundTexture.loadFromFile("assets/bgg.png")) {
         std::cerr << "Error loading background texture!" << std::endl;
     }
+
+    majorLeftObstacle = MajorLeftObstacle(2000, 6000, -2200, -200,
+     leftObstacleMovingSpeed, 10, 20);
 
     heartTextures.resize(vehicle.getLife());
     heartSprites.resize(vehicle.getLife());
@@ -27,7 +35,19 @@ Game::Game()
         static_cast<float>(windowSize.x) / textureSize.x,
         static_cast<float>(windowSize.y) / textureSize.y
     );
+
 }
+
+MajorLeftObstacle Game::initMajorLeftObstacle() {
+    return MajorLeftObstacle(2000, 6000, -2200, -200, 0.5f, 10, 20);
+}
+
+WinningPortal Game::initPortal(ObstacleContainer &container, GameConfig& config) {
+    int lastObjX, lastObjY;
+    container.getLastObstacle(lastObjX, lastObjY);
+    return WinningPortal(100, 100, lastObjX + 200, config.screenHeight);
+}
+
 
 void Game::run() {
     sf::Clock clock;
@@ -85,6 +105,16 @@ void Game::update(float deltaTime) {
     rollingContainer.activate(vehicle.getPosition().x);
     fallingContainer.fallAll();
     rollingContainer.rollAll();
+    majorLeftObstacle.move();
+    if (gameState == GameState::PLAYING) {
+        score += leftObstacleMovingSpeed / 10 ;
+    }
+
+
+    if (majorLeftObstacle.checkCollision(vehicle)){
+        //gameState = GameState::GAME_OVER;
+        //removeLife();
+    }
 
     if (vehicle.isInvincible()) {
         invincbleTimer += deltaTime;
@@ -111,29 +141,40 @@ void Game::render() {
     camera.applyTo(window);
     window.draw(backgroundSprite);
 
-    for (int i = 0; i < vehicle.lives; ++i) {
-        heartSprites[i].setPosition(cameraCenter.x - cameraSize.x / 2 + 10 + i * 30, cameraCenter.y - cameraSize.y / 2 + 10);
-        window.draw(heartSprites[i]);
+
+    sf::Font font;
+    if (!font.loadFromFile("assets/arial.ttf")) {
+        std::cerr << "Error loading font!" << std::endl;
     }
+
 
     // Draw other objects only if game is running
     if (gameState == GameState::PLAYING) {
         container.drawAll(window);
         fallingContainer.drawAll(window);
         vehicle.draw(window);
+        rollingContainer.drawAll(window);
+        majorLeftObstacle.draw(window);
+        winningPortal.draw(window);
+
     } else if (gameState == GameState::GAME_OVER) {
         // Display "Game Over" popup
-        sf::Font font;
-        if (!font.loadFromFile("assets/Arial.ttf")) {
-            std::cerr << "Error loading font!" << std::endl;
-        }
-
         sf::Text gameOverText("Game Over!", font, 50);
         gameOverText.setFillColor(sf::Color::Red);
         gameOverText.setPosition(cameraCenter.x - 150, cameraCenter.y - 50);
 
         window.draw(gameOverText);
     }
+
+    for (int i = 0; i < vehicle.lives; ++i) {
+        heartSprites[i].setPosition(cameraCenter.x - cameraSize.x / 2 + 10 + i * 30, cameraCenter.y - cameraSize.y / 2 + 10);
+        window.draw(heartSprites[i]);
+    }
+    sf::Text scoreText("Score: " + std::to_string((int)score), font, 20);
+    scoreText.setFillColor(sf::Color::Black);
+    scoreText.setPosition(cameraCenter.x, cameraCenter.y - cameraSize.y / 2 + 10);
+    window.draw(scoreText);
+
 
     window.display();
 }
@@ -156,21 +197,20 @@ void Game::removeLife() {
 
 
 ObstacleFactory Game::initializeFactory(ObstacleContainer* container, FallingObstacleContainer* fallingContainer,
-RollingObstacleContainer* rollingContainer) {
-    const float screenWidth = 800.0f;
-    const float screenHeight = 600.0f;
+RollingObstacleContainer* rollingContainer, GameConfig& config) {
     const float gameTime = 0.0f; // Start game time at 0
 
     // Number of obstacles per screen
-    const int numWalls = 10;
-    const int numSpikeWalls = 10;
-    const int numFallingObjects = 1;
-    const int numRollingObjects = 1;
+    const int numWalls = config.numWalls;
+    const int numSpikeWalls = config.numSpikeWalls;
+    const int numFallingObjects = config.numFallingObjects;
+    const int numRollingObjects = config.numRollingObjects;
 
     return ObstacleFactory(
-        numWalls, numSpikeWalls, numFallingObjects,screenWidth,
+        numWalls, numSpikeWalls, numFallingObjects,
+        config.screenWidth,
         numRollingObjects,
-        screenHeight, gameTime,
+        config.screenHeight, gameTime,
         container, fallingContainer, rollingContainer
     );
 }

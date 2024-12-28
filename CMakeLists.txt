@@ -21,6 +21,8 @@ add_executable(2DGameDev ${SOURCES}
         src/player/camera.cpp
         src/game/Game.cpp
         src/game/Game.h
+        src/objects/objects.h
+        src/objects/objects.cpp
 )
 
 # Link SFML libraries
