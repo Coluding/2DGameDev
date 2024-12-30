@@ -128,6 +128,9 @@ void Game::update(float deltaTime) {
             removeLife();
         }
     }
+    if (winningPortal.checkInPortal(vehicle)){
+        gameState = GameState::WIN;
+    }
 }
 
 void Game::render() {
@@ -164,6 +167,11 @@ void Game::render() {
         gameOverText.setPosition(cameraCenter.x - 150, cameraCenter.y - 50);
 
         window.draw(gameOverText);
+    } else  if(gameState == GameState::WIN){
+        sf::Text winText("You Win!", font, 50);
+        winText.setFillColor(sf::Color::Green);
+        winText.setPosition(cameraCenter.x - 150, cameraCenter.y - 50);
+        window.draw(winText);
     }
 
     for (int i = 0; i < vehicle.lives; ++i) {

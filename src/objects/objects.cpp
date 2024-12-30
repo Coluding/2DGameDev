@@ -7,6 +7,8 @@
 
 #include "objects.h"
 #include "../player/character.h"
+#include "utils.h"
+
 
 WinningPortal::WinningPortal(float width, float height, float x, float y) {
     // Portal setup
@@ -52,3 +54,17 @@ void WinningPortal::draw(sf::RenderWindow &window) const {
     window.draw(portal);  // Draw the main portal
     window.draw(portalText); // Draw the text
 }
+
+bool WinningPortal::checkInPortal(Vehicle &vehicle) {
+    float wheelX = 0.0f, wheelY = 0.0f, verticalBodyX = 0.0f, verticalBodyY = 0.0f,
+         horizontalBodyX = 0.0f, horizontalBodyY = 0.0f;
+
+    vehicle.getFullPosition(wheelX, wheelY, verticalBodyX, verticalBodyY, horizontalBodyX, horizontalBodyY);
+
+    std::pair<double, double> vehicleXInterval = std::pair<double, double> {horizontalBodyX - vehicle.widthHorizontal / 2,verticalBodyX + vehicle.widthHorizontal / 2};
+    std::pair<double, double> obstacleXInterval = std::pair<double, double> {portal.getPosition().x, portal.getPosition().x + portal.getSize().x};
+
+    return  doIntervalsOverlap(vehicleXInterval, obstacleXInterval);
+
+}
+

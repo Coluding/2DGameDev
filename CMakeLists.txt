@@ -23,6 +23,8 @@ add_executable(2DGameDev ${SOURCES}
         src/game/Game.h
         src/objects/objects.h
         src/objects/objects.cpp
+        src/objects/utils.h
+        src/objects/utils.cpp
 )
 
 # Link SFML libraries

@@ -9,57 +9,7 @@
 
 
 #include "obstacles.h"
-
-void checkRightAndLeftEdgeCollision(Vehicle& vehicle, Obstacle& wall,float& wheelX, float& wheelY, float& verticalBodyX, float& verticalBodyY,
-        float& horizontalBodyX, float& horizontalBodyY);
-
-void checkRightAndLeftEdgeCollision(Vehicle& vehicle, Obstacle& wall,
-    float& wheelX, float& wheelY, float& verticalBodyX, float& verticalBodyY,
-        float& horizontalBodyX, float& horizontalBodyY) {
-
-        vehicle.getFullPosition(wheelX, wheelY, verticalBodyX, verticalBodyY, horizontalBodyX, horizontalBodyY);
-
-
-    float wheelBottomY = wheelY + vehicle.getWheelRadius();
-    float wallTopY = wall.getPosition().y;
-    float wallLeftX = wall.getPosition().x;
-    float wallRightX = wallLeftX + wall.getSize().x;
-
-    bool hitWallLeft = horizontalBodyX + (vehicle.widthHorizontal / 2) > wallLeftX - 10 && horizontalBodyX < wallLeftX + 10;
-    bool hitWallRight = horizontalBodyX - (vehicle.widthHorizontal / 2) < wallRightX + 10 && horizontalBodyX > wallRightX - 10;
-
-    if (hitWallLeft && wheelBottomY > wallTopY + 20) {
-        vehicle.ForbidRight();
-    } else {
-        vehicle.AllowRight();
-    }
-
-    if (hitWallRight && wheelBottomY > wallTopY + 20) {
-        vehicle.ForbidLeft();
-    } else {
-        vehicle.AllowLeft();
-    }
-}
-
-
-bool checkWithinXBounds(Vehicle& vehicle, float wheelX, float wallLeftX, float wallRightX) {
-
-    bool withinXBounds = (wheelX + vehicle.getWheelRadius() > wallLeftX - 10 &&
-                          wheelX - vehicle.getWheelRadius() < wallRightX);
-
-    return withinXBounds;
-}
-
-bool checkWithinYBounds(float wheelBottomY, float wallTopY, float wheelY, float wallBottomY) {
-
-   bool withinYBounds = (wheelBottomY >= wallTopY && wheelY < wallBottomY);
-
-   return withinYBounds;
-}
-
-bool doIntervalsOverlap(const std::pair<double, double>& interval1, const std::pair<double, double>& interval2) {
-    return interval1.second >= interval2.first && interval1.first <= interval2.second;
-}
+#include "utils.h"
 
 
 Wall::Wall(float height, float width, float x, float y, sf::Color color) {
@@ -422,9 +372,9 @@ RollingObstacle::RollingObstacle(float baseRadius, float rollingSpeed, float y, 
     shadow.setRadius(baseRadius);
     border.setRadius(baseRadius);
 
-    base.setPosition(100000, 200);
-    shadow.setPosition(100000, y);
-    border.setPosition(100000, y);
+    base.setPosition(100000, y - baseRadius * 2);
+    shadow.setPosition(100000, y - baseRadius * 2);
+    border.setPosition(100000, y - baseRadius * 2);
 
     base.setFillColor(sf::Color(230, 247, 255));
     shadow.setFillColor(sf::Color(100, 100, 100, 100));
@@ -690,7 +640,7 @@ void ObstacleFactory::createRollingObjects() {
     int gapAccumulator = 0;
 
     for (int i = 0; i < maxObjects; i++){
-        rollingContainer->addObstacle(std::move(createRandomRollingObject(i, 60, 60, gapAccumulator)));
+        rollingContainer->addObstacle(std::move(createRandomRollingObject(i, 20, 20, gapAccumulator)));
     }
 }
 
@@ -768,6 +718,7 @@ std::unique_ptr<RollingObstacle> ObstacleFactory::createRandomRollingObject(int 
     std::uniform_int_distribution<> disRadius(minRadius, maxRadius);
     std::uniform_int_distribution<> disOffset(200, 400);
     std::uniform_int_distribution<> xPosOffset(5, 30);
+    //std::uniform_int_distribution<> yPos(0,)
 
     int xPos = (x + xPosOffset(gen)) * 100;
 

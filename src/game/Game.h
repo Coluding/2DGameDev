@@ -11,7 +11,8 @@
 
 enum GameState {
     PLAYING,
-    GAME_OVER
+    GAME_OVER,
+    WIN
 };
 
 
@@ -39,7 +40,7 @@ struct GameConfig {
         float initScore = 0.0f,
         int walls = 1,
         int spikeWalls = 1,
-        int fallingObjects = 1,
+        int fallingObjects = 10,
         int rollingObjects = 1,
         float sWidth = 1000.0f,
         float sHeight = 600.0f,
@@ -77,6 +78,7 @@ private:
     std::vector<sf::Texture> heartTextures;
     std::vector<sf::Sprite> heartSprites;
     float score = 0.0f;
+    bool isCounting = true;
 
 
     // Game objects
