@@ -123,7 +123,7 @@ void Game::update(float deltaTime) {
         }
     }
 
-    if (container.checkCollision(vehicle ) || fallingContainer.checkCollision(vehicle)) {
+    if (container.checkCollision(vehicle ) || fallingContainer.checkCollision(vehicle) || rollingContainer.checkCollision(vehicle)) {
         if (!vehicle.isInvincible()) {
             removeLife();
         }

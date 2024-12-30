@@ -464,6 +464,9 @@ bool RollingObstacle::checkCollision(Vehicle &vehicle) {
     if (xOverlap && yOverlap) {
         return true;
     }
+
+    return false;
+
 }
 
 
